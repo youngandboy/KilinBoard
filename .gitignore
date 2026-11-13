@@ -1,0 +1,19 @@
+# Keil generated artifacts
+output/
+listing/
+*.o
+*.d
+*.crf
+*.axf
+*.sct
+*.map
+*.htm
+*.lnp
+*.dep
+*.uvguix.*
+
+# GCC generated artifacts
+build/
+
+# Build logs
+keil_build.log
