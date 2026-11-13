@@ -1,0 +1,25 @@
+
+==> Cleaning build and output artifacts
+Toolchain: WSL (/mnt/h/RTOS/OneNet_Mini/firmware)
+make: Entering directory '/mnt/h/RTOS/OneNet_Mini/firmware'
+rm -rf build output/gcc/OneNet_Mini_Bare.elf output/gcc/OneNet_Mini_Bare.hex output/gcc/OneNet_Mini_Bare.bin output/gcc/OneNet_Mini_Bare.map
+make: Leaving directory '/mnt/h/RTOS/OneNet_Mini/firmware'
+make: Entering directory '/mnt/h/RTOS/OneNet_Mini/firmware'
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c core/core_cm3.c -o build/obj/core/core_cm3.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c core/system_stm32f10x.c -o build/obj/core/system_stm32f10x.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c core/stm32f10x_it.c -o build/obj/core/stm32f10x_it.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c core/syscalls.c -o build/obj/core/syscalls.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c fwlib/src/misc.c -o build/obj/fwlib/src/misc.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c fwlib/src/stm32f10x_gpio.c -o build/obj/fwlib/src/stm32f10x_gpio.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c fwlib/src/stm32f10x_rcc.c -o build/obj/fwlib/src/stm32f10x_rcc.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c fwlib/src/stm32f10x_usart.c -o build/obj/fwlib/src/stm32f10x_usart.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c hardware/src/delay.c -o build/obj/hardware/src/delay.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c hardware/src/usart.c -o build/obj/hardware/src/usart.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -O0 -g3 -ffunction-sections -fdata-sections -Wall -c user/main.c -o build/obj/user/main.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -Icore -Ifwlib/inc -Ihardware/inc -x assembler-with-cpp -c startup/startup_stm32f103xe.s -o build/obj/startup/startup_stm32f103xe.o
+arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -T linker/STM32F103RE.ld -Wl,--gc-sections -Wl,-Map=output/gcc/OneNet_Mini_Bare.map -specs=nano.specs -specs=nosys.specs -o output/gcc/OneNet_Mini_Bare.elf build/obj/core/core_cm3.o build/obj/core/system_stm32f10x.o build/obj/core/stm32f10x_it.o build/obj/core/syscalls.o build/obj/fwlib/src/misc.o build/obj/fwlib/src/stm32f10x_gpio.o build/obj/fwlib/src/stm32f10x_rcc.o build/obj/fwlib/src/stm32f10x_usart.o build/obj/hardware/src/delay.o build/obj/hardware/src/usart.o build/obj/user/main.o build/obj/startup/startup_stm32f103xe.o
+arm-none-eabi-objcopy -O ihex output/gcc/OneNet_Mini_Bare.elf output/gcc/OneNet_Mini_Bare.hex
+arm-none-eabi-objcopy -O binary output/gcc/OneNet_Mini_Bare.elf output/gcc/OneNet_Mini_Bare.bin
+make: Leaving directory '/mnt/h/RTOS/OneNet_Mini/firmware'
+
+Build OK (WSL)

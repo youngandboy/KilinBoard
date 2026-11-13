@@ -1,0 +1,21 @@
+{
+    "ok":  true,
+    "port":  "COM3",
+    "baud":  115200,
+    "timeoutSec":  15,
+    "reset":  true,
+    "resetExit":  0,
+    "bytes":  343,
+    "expect":  [
+                   "OneNET Mini bare-metal project",
+                   "Hello from main()"
+               ],
+    "expectRegex":  [
+                        "counter\\s*=\\s*1\\b",
+                        "counter\\s*=\\s*2\\b"
+                    ],
+    "missing":  [
+
+                ],
+    "log":  "H:\\RTOS\\OneNet_Mini\\firmware\\logs\\serial.log"
+}

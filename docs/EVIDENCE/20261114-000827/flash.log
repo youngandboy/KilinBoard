@@ -1,0 +1,35 @@
+CLI : C:\Program Files (x86)\STMicroelectronics\STM32 ST-LINK Utility\ST-LINK Utility\ST-LINK_CLI.exe
+HEX : H:\RTOS\OneNet_Mini\firmware\output\gcc\OneNet_Mini_Bare.hex
+Mode: SWD
+
+STM32 ST-LINK CLI v3.5.0.0
+STM32 ST-LINK Command Line Interface
+
+ST-LINK SN: 51FF6E064885535710410887
+ST-LINK Firmware version: V2J27S6
+Connected via SWD.
+SWD Frequency = 4000K.
+Target voltage = 3.3 V
+Connection mode: Normal
+Reset mode: Software reset
+Device ID: 0x414 
+Device flash Size: 512 Kbytes
+Device family: STM32F10xx High-density
+
+Loading file...
+Flash Programming:
+  File : H:\RTOS\OneNet_Mini\firmware\output\gcc\OneNet_Mini_Bare.hex
+  Address : 0x08000000
+Memory programming...
+Memory programmed in 0s and 704ms.
+Verification...OK
+Programming Complete.
+Programmed memory Checksum: 0x000AE0D9
+
+MCU Reset.
+
+Application started.
+
+
+
+Flash OK

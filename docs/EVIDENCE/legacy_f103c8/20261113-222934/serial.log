@@ -1,0 +1,12 @@
+
+========================================
+ OneNET Mini bare-metal project
+ MCU  : STM32F103CBT6 @ 72MHz
+ UART : USART1 PA9/PA10, 115200 8N1
+ Build: Nov 13 2026 22:29:40
+========================================
+Hello from main()!
+
+main loop is running, counter = 0
+main loop is running, counter = 1
+main loop is running, counter = 2

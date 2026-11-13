@@ -8,7 +8,7 @@ OBJCOPY := arm-none-eabi-objcopy
 SIZE    := arm-none-eabi-size
 
 CPU     := -mcpu=cortex-m3 -mthumb -mfloat-abi=soft
-DEFS    := -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER
+DEFS    := -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER
 INCS    := -Icore -Ifwlib/inc -Ihardware/inc
 ifeq ($(RELEASE),1)
 OPT     := -Os -g0
@@ -17,7 +17,7 @@ OPT     := -O0 -g3
 endif
 CFLAGS  := $(CPU) $(DEFS) $(INCS) $(OPT) -ffunction-sections -fdata-sections -Wall
 ASFLAGS := $(CPU) $(DEFS) $(INCS)
-LDFLAGS := $(CPU) -T linker/STM32F103CB.ld -Wl,--gc-sections \
+LDFLAGS := $(CPU) -T linker/STM32F103RE.ld -Wl,--gc-sections \
            -Wl,-Map=$(OUTDIR)/$(TARGET).map \
            -specs=nano.specs -specs=nosys.specs
 
@@ -34,7 +34,7 @@ C_SRCS := \
  hardware/src/usart.c \
  user/main.c
 
-ASM_SRCS := startup/startup_stm32f103xb.s
+ASM_SRCS := startup/startup_stm32f103xe.s
 
 C_OBJS   := $(patsubst %.c,$(OBJDIR)/%.o,$(C_SRCS))
 ASM_OBJS := $(patsubst %.s,$(OBJDIR)/%.o,$(ASM_SRCS))
@@ -57,7 +57,7 @@ $(OBJDIR)/%.o: %.s
 	@mkdir -p $(dir $@)
 	$(CC) $(ASFLAGS) -x assembler-with-cpp -c $< -o $@
 
-$(ELF): $(OBJS) linker/STM32F103CB.ld
+$(ELF): $(OBJS) linker/STM32F103RE.ld
 	@mkdir -p $(OUTDIR)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
@@ -71,7 +71,7 @@ size: $(ELF)
 	$(SIZE) $(ELF)
 
 # Optional: run the image in QEMU's STM32F100 model (8 KB RAM).
-# The normal STM32F103CB image uses STM32F103CB.ld and must not be used here.
+# The normal STM32F103RE image uses STM32F103RE.ld and must not be used here.
 $(EMU_ELF): $(OBJS) linker/STM32F100_EMU.ld
 	@mkdir -p $(dir $@)
 	$(CC) $(CPU) -T linker/STM32F100_EMU.ld -Wl,--gc-sections \

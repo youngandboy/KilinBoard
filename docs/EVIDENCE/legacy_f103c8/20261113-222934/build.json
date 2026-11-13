@@ -1,0 +1,21 @@
+{
+    "tool":  "keil",
+    "ok":  true,
+    "exitCode":  0,
+    "started":  "2026-11-13T22:29:35",
+    "elapsedSec":  6.71,
+    "log":  "H:\\RTOS\\OneNet_Mini\\firmware\\logs\\build-keil.log",
+    "sizeLog":  "H:\\RTOS\\OneNet_Mini\\firmware\\logs\\size.txt",
+    "errors":  [
+
+               ],
+    "warningCount":  0,
+    "size":  {
+                 "text":  11512,
+                 "data":  44,
+                 "bss":  2148,
+                 "flash":  11556,
+                 "ram":  2192,
+                 "raw":  "Code=10728 RO-data=784 RW-data=44 ZI-data=2148"
+             }
+}

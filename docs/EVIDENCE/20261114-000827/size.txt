@@ -1,0 +1,6 @@
+tool=gcc
+flash=7712 bytes
+ram=416 bytes
+text=7632 data=80 bss=336
+raw=   text	   data	    bss	    dec	    hex	filename
+   7632	     80	    336	   8048	   1f70	/mnt/h/RTOS/OneNet_Mini/firmware/output/gcc/OneNet_Mini_Bare.elf

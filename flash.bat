@@ -11,8 +11,7 @@ rem   flash.bat "path\to\firmware.hex"
 rem   flash.bat -Full "path\to\firmware.hex"
 rem
 rem Default hex:
-rem   output\OneNet_Mini_Bare.hex          (Keil build)
-rem   output\gcc\OneNet_Mini_Bare.hex      (GCC build, used if Keil hex is absent)
+rem   output\gcc\OneNet_Mini_Bare.hex      (ARM GCC build)
 rem ---------------------------------------------------------------------------
 
 set "FULL="
@@ -26,13 +25,12 @@ if /I "%~1"=="-Full" (
     set "HEX=%~1"
 )
 
-if not defined HEX set "HEX=%~dp0output\OneNet_Mini_Bare.hex"
-if not exist "%HEX%" if exist "%~dp0output\gcc\OneNet_Mini_Bare.hex" set "HEX=%~dp0output\gcc\OneNet_Mini_Bare.hex"
+if not defined HEX set "HEX=%~dp0output\gcc\OneNet_Mini_Bare.hex"
 
 if not exist "%HEX%" (
     echo ERROR: HEX file not found:
     echo   %HEX%
-    echo Build the project first: build.bat or build_keil.bat
+    echo Build the project first: build.bat
     exit /b 1
 )
 

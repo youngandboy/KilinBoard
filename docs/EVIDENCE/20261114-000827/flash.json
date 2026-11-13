@@ -1,0 +1,15 @@
+{
+    "tool":  "stlink",
+    "ok":  true,
+    "exitCode":  0,
+    "hex":  "H:\\RTOS\\OneNet_Mini\\firmware\\output\\gcc\\OneNet_Mini_Bare.hex",
+    "fullErase":  false,
+    "elapsedSec":  1.54,
+    "log":  "H:\\RTOS\\OneNet_Mini\\firmware\\logs\\flash.log",
+    "signals":  {
+                    "flashOk":  true,
+                    "verifyOk":  true,
+                    "appStarted":  true,
+                    "probeInUse":  false
+                }
+}

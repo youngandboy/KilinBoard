@@ -1053,7 +1053,13 @@ static void SetSysClockTo72(void)
     /*  PLL configuration: PLLCLK = HSE * 9 = 72 MHz */
     RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLXTPRE |
                                         RCC_CFGR_PLLMULL));
-    RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMULL6); /****************** 外接12MHz 倍频值为6 72MHz **********************/
+#if (BOARD_HSE_HZ == 8000000)
+    RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMULL9);
+#elif (BOARD_HSE_HZ == 12000000)
+    RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMULL6);
+#else
+    #error "BOARD_HSE_HZ must be 8000000 or 12000000"
+#endif
 #endif /* STM32F10X_CL */
 
     /* Enable PLL */

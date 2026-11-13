@@ -1,0 +1,14 @@
+{
+    "keil":  {
+                 "flash":  11556,
+                 "ram":  2192,
+                 "updated":  "2026-11-13T22:12:25",
+                 "note":  "created by verify-board.ps1"
+             },
+    "gcc":  {
+                "flash":  7456,
+                "ram":  416,
+                "updated":  "2026-11-13T22:30:27",
+                "note":  "created by verify-board.ps1"
+            }
+}

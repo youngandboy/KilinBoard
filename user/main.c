@@ -68,7 +68,7 @@ int main(void)
 	UsartPrintf(USART1, "\r\n");
 	UsartPrintf(USART1, "========================================\r\n");
 	UsartPrintf(USART1, " OneNET Mini bare-metal project\r\n");
-	UsartPrintf(USART1, " MCU  : STM32F103CBT6 @ 72MHz\r\n");
+	UsartPrintf(USART1, " MCU  : %s, HSE %uMHz\r\n", BOARD_MCU_NAME, (unsigned int)(BOARD_HSE_HZ / 1000000U));
 	UsartPrintf(USART1, " UART : USART1 PA9/PA10, 115200 8N1\r\n");
 	UsartPrintf(USART1, " Build: %s %s\r\n", __DATE__, __TIME__);
 	UsartPrintf(USART1, "========================================\r\n");

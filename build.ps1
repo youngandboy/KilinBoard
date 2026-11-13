@@ -14,7 +14,7 @@ $ElfFile   = Join-Path $OutDir "OneNet_Mini_Bare.elf"
 $HexFile   = Join-Path $OutDir "OneNet_Mini_Bare.hex"
 $BinFile   = Join-Path $OutDir "OneNet_Mini_Bare.bin"
 $MapFile   = Join-Path $OutDir "OneNet_Mini_Bare.map"
-$Linker    = Join-Path $Root "linker\STM32F103CB.ld"
+$Linker    = Join-Path $Root "linker\STM32F103RE.ld"
 
 function Write-Step([string]$Text) {
     Write-Host ""
@@ -157,7 +157,7 @@ $Sources = @(
 )
 
 $AssemblySources = @(
-    "startup\startup_stm32f103xb.s"
+    "startup\startup_stm32f103xe.s"
 )
 
 $Optimization = if ($Release) { @("-Os", "-g0") } else { @("-O0", "-g3") }
@@ -166,7 +166,7 @@ $CommonFlags = @(
     "-mcpu=cortex-m3",
     "-mthumb",
     "-mfloat-abi=soft",
-    "-DSTM32F10X_MD",
+    "-DSTM32F10X_HD",
     "-DUSE_STDPERIPH_DRIVER",
     "-ffunction-sections",
     "-fdata-sections",

@@ -1,0 +1,8 @@
+{
+    "gcc": {
+        "flash": 7704,
+        "ram": 416,
+        "updated": "2026-11-13T23:00:00",
+        "note": "STM32F103RET6 initial baseline (ARM GCC, 8MHz HSE config)"
+    }
+}

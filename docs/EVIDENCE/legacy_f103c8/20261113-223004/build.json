@@ -1,0 +1,21 @@
+{
+    "tool":  "gcc",
+    "ok":  true,
+    "exitCode":  0,
+    "started":  "2026-11-13T22:30:05",
+    "elapsedSec":  13.7,
+    "log":  "H:\\RTOS\\OneNet_Mini\\firmware\\logs\\build-gcc.log",
+    "sizeLog":  "H:\\RTOS\\OneNet_Mini\\firmware\\logs\\size.txt",
+    "errors":  [
+
+               ],
+    "warningCount":  0,
+    "size":  {
+                 "text":  7376,
+                 "data":  80,
+                 "bss":  336,
+                 "flash":  7456,
+                 "ram":  416,
+                 "raw":  "   text\t   data\t    bss\t    dec\t    hex\tfilename\n   7376\t     80\t    336\t   7792\t   1e70\t/mnt/h/RTOS/OneNet_Mini/firmware/output/gcc/OneNet_Mini_Bare.elf"
+             }
+}
