@@ -1,0 +1,87 @@
+#include <rtthread.h>
+#include "app_config.h"
+#include "app_types.h"
+#include "app_ipc.h"
+#include "board_led.h"
+#include "board_key.h"
+#include "task_sensor.h"
+
+static struct rt_thread sensor_thread;
+static rt_uint8_t sensor_stack[APP_TASK_SENSOR_STACK] __attribute__((aligned(RT_ALIGN_SIZE)));
+
+static void task_sensor_entry(void *parameter)
+{
+    rt_uint8_t prev_keys;
+    rt_tick_t last_sample;
+    int i;
+
+    (void)parameter;
+
+    board_key_init();
+    prev_keys = board_key_scan();
+    last_sample = rt_tick_get();
+
+    while (1)
+    {
+        rt_uint8_t keys = board_key_scan();
+
+        if (keys != prev_keys)
+        {
+            for (i = 0; i < BOARD_KEY_MAX; i++)
+            {
+                rt_uint8_t bit = (1UL << i);
+
+                if ((keys & bit) == (prev_keys & bit))
+                {
+                    continue;
+                }
+
+                app_msg_t msg;
+
+                rt_memset(&msg, 0, sizeof(msg));
+                msg.type = APP_MSG_KEY;
+                msg.u.key.id = (rt_uint8_t)i;
+                msg.u.key.pressed = (keys & bit) ? 1 : 0;
+
+                rt_kprintf("[key] %d %s\n", i + 1, msg.u.key.pressed ? "down" : "up");
+                board_led_toggle((board_led_id_t)i);
+                app_mq_send(&msg);
+            }
+            prev_keys = keys;
+        }
+
+        app_event_send(APP_EVT_SENSOR_ALIVE);
+
+        if ((rt_tick_get() - last_sample) >= rt_tick_from_millisecond(APP_SENSOR_PERIOD_MS))
+        {
+            app_msg_t msg;
+
+            rt_memset(&msg, 0, sizeof(msg));
+            msg.type = APP_MSG_SENSOR;
+            app_mq_send(&msg);
+            last_sample = rt_tick_get();
+        }
+
+        rt_thread_mdelay(APP_KEY_SCAN_MS);
+    }
+}
+
+int task_sensor_start(void)
+{
+    rt_err_t result;
+
+    result = rt_thread_init(&sensor_thread,
+                            "sensor",
+                            task_sensor_entry,
+                            RT_NULL,
+                            sensor_stack,
+                            sizeof(sensor_stack),
+                            APP_TASK_SENSOR_PRIORITY,
+                            APP_TASK_SENSOR_TICK);
+    if (result != RT_EOK)
+    {
+        return APP_ERR;
+    }
+
+    return rt_thread_startup(&sensor_thread);
+}

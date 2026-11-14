@@ -1,0 +1,24 @@
+import os
+from building import *
+
+cwd = GetCurrentDir()
+
+src = []
+src += Glob('*.c')
+src += Glob('board/*.c')
+src += Glob('drivers/*.c')
+src += Glob('services/*.c')
+src += Glob('tasks/*.c')
+src += Glob('shell/*.c')
+src += Glob('port/*.c')
+
+path = [cwd]
+path += [os.path.join(cwd, 'board')]
+path += [os.path.join(cwd, 'drivers')]
+path += [os.path.join(cwd, 'services')]
+path += [os.path.join(cwd, 'tasks')]
+path += [os.path.join(cwd, 'shell')]
+path += [os.path.join(cwd, 'port')]
+
+group = DefineGroup('app', src, depend=[''], CPPPATH=path)
+Return('group')

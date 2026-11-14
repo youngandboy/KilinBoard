@@ -74,7 +74,7 @@
 #define RT_HOOK_USING_FUNC_PTR
 #define RT_USING_IDLE_HOOK
 #define RT_IDLE_HOOK_LIST_SIZE 4
-#define IDLE_THREAD_STACK_SIZE 256
+#define IDLE_THREAD_STACK_SIZE 512
 
 /* kservice options */
 
@@ -152,6 +152,7 @@
 #define RT_SERIAL_USING_DMA
 #define RT_SERIAL_RB_BUFSZ 64
 #define RT_USING_PIN
+#define RT_USING_WDT
 /* end of Device Drivers */
 
 /* C/C++ and POSIX layer */
@@ -189,6 +190,16 @@
 
 /* Utilities */
 
+#define RT_USING_ULOG
+#define ULOG_OUTPUT_LVL_I
+#define ULOG_OUTPUT_LVL 6
+#define ULOG_ASSERT_ENABLE
+#define ULOG_LINE_BUF_SIZE 128
+
+#define RT_USING_FAL
+#define FAL_PART_HAS_TABLE_CFG
+#define FAL_DEV_NAME_MAX 24
+#define FAL_DEV_BLK_MAX 6
 /* end of Utilities */
 
 /* Using USB legacy version */
@@ -414,6 +425,11 @@
 
 /* end of Arduino libraries */
 /* end of RT-Thread online packages */
+#define PKG_USING_EASYFLASH
+#define PKG_EASYFLASH_ENV
+#define PKG_EASYFLASH_ERASE_GRAN 4096
+#define PKG_EASYFLASH_WRITE_GRAN 32
+#define PKG_EASYFLASH_START_ADDR 0
 #define SOC_FAMILY_STM32
 #define SOC_SERIES_STM32F1
 
@@ -430,6 +446,8 @@
 #define BSP_USING_UART
 #define BSP_STM32_UART_V1_TX_TIMEOUT 2000
 #define BSP_USING_UART1
+#define BSP_USING_WDT
+#define BSP_USING_ON_CHIP_FLASH
 /* end of On-chip Peripheral Drivers */
 
 /* Board extended module Drivers */
