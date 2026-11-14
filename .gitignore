@@ -7,3 +7,16 @@ logs/
 *.o
 *.d
 *.map
+
+# RT-Thread BSP downloaded packages / build outputs
+rtthread/bsp/**/packages/
+rtthread/bsp/**/build/
+rtthread/bsp/**/.sconsign.dblite
+rtthread/bsp/**/__pycache__/
+rtthread/bsp/**/*.elf
+rtthread/bsp/**/*.bin
+rtthread/bsp/**/*.hex
+
+# Python cache
+__pycache__/
+*.pyc
