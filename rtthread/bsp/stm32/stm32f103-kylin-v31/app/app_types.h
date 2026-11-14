@@ -54,6 +54,14 @@ typedef struct
     } u;
 } app_msg_t;
 
+typedef struct
+{
+    rt_int16_t temp_x10;
+    rt_uint16_t humi_x10;
+    rt_uint16_t light_mv;
+    rt_uint8_t valid;   /* bit0: SHT20, bit1: light */
+} app_sensor_sample_t;
+
 #define APP_EVT_SENSOR_ALIVE    (1UL << 0)
 #define APP_EVT_NET_ALIVE       (1UL << 1)
 #define APP_EVT_NET_CONNECTED   (1UL << 2)

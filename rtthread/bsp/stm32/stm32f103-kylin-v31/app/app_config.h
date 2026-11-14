@@ -22,6 +22,16 @@
 #define APP_BUZZER_PIN       GET_PIN(B, 3)
 
 /* --------------------------------------------------------------------------
+ * I2C / sensors
+ * -------------------------------------------------------------------------- */
+#define APP_I2C_BUS_NAME        "swi2c1"
+#define APP_AT24C02_ADDR        0x50
+#define APP_AT24C02_PAGE_SIZE   8
+#define APP_SHT20_ADDR          0x40
+#define APP_LIGHT_ADC_DEV       "adc1"
+#define APP_LIGHT_ADC_CHANNEL   13
+
+/* --------------------------------------------------------------------------
  * Tasks
  * -------------------------------------------------------------------------- */
 #define APP_TASK_SENSOR_STACK          1024

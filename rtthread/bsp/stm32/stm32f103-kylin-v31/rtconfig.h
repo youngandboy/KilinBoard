@@ -153,6 +153,16 @@
 #define RT_SERIAL_RB_BUFSZ 64
 #define RT_USING_PIN
 #define RT_USING_WDT
+#define RT_USING_I2C
+#define RT_USING_I2C_BITOPS
+#define RT_USING_SOFT_I2C
+#define RT_USING_SOFT_I2C1
+#define RT_SOFT_I2C1_SCL_PIN 26
+#define RT_SOFT_I2C1_SDA_PIN 27
+#define RT_SOFT_I2C1_BUS_NAME "swi2c1"
+#define RT_SOFT_I2C1_TIMING_DELAY 10
+#define RT_SOFT_I2C1_TIMING_TIMEOUT 10
+#define RT_USING_ADC
 /* end of Device Drivers */
 
 /* C/C++ and POSIX layer */
@@ -448,6 +458,10 @@
 #define BSP_USING_UART1
 #define BSP_USING_WDT
 #define BSP_USING_ON_CHIP_FLASH
+#define BSP_USING_SOFT_I2C
+#define BSP_USING_SOFT_I2C1
+#define BSP_USING_ADC
+#define BSP_USING_ADC1
 /* end of On-chip Peripheral Drivers */
 
 /* Board extended module Drivers */

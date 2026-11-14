@@ -17,6 +17,48 @@ menu "On-chip Peripheral Drivers"
         select RT_USING_PIN
         default y
 
+    menuconfig BSP_USING_SOFT_I2C
+        bool "Enable software I2C (swi2c)"
+        default y
+        select RT_USING_I2C
+        select RT_USING_SOFT_I2C
+        if BSP_USING_SOFT_I2C
+            config RT_SOFT_I2C1_HAS_PIN_DEFAULT
+                bool
+                default y
+
+            config RT_SOFT_I2C1_SCL_PIN_DEFAULT
+                int
+                default 26
+
+            config RT_SOFT_I2C1_SDA_PIN_DEFAULT
+                int
+                default 27
+
+            menuconfig BSP_USING_SOFT_I2C1
+                bool "Enable software I2C1 Bus (swi2c1)"
+                default y
+                select RT_USING_SOFT_I2C1
+                if BSP_USING_SOFT_I2C1
+                    config RT_SOFT_I2C1_SCL_PIN
+                        int "swi2c1 SCL pin number"
+                        default 26
+                    config RT_SOFT_I2C1_SDA_PIN
+                        int "swi2c1 SDA pin number"
+                        default 27
+                endif
+        endif
+
+    menuconfig BSP_USING_ADC
+        bool "Enable ADC"
+        default y
+        select RT_USING_ADC
+        if BSP_USING_ADC
+            config BSP_USING_ADC1
+                bool "Enable ADC1"
+                default y
+        endif
+
     menuconfig BSP_USING_UART
         bool "Enable UART"
         default y

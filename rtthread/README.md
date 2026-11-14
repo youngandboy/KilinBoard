@@ -7,19 +7,21 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 
 - **Step 1 complete**: RT-Thread v5.3.0 boots, 72 MHz, USART1 msh at 115200.
 - **Step 2 complete**: application skeleton, LED/KEY/buzzer, IWDG, FAL + EasyFlash config, msh commands.
-- **Step 2 verified on board**:
-  - `led 0 on/off` -> mask changes
-  - `key` -> reads 4 keys
-  - `beep 100` -> buzzer
-  - `cfg` / `cfg set` / `cfg save` / reset -> value survives reboot
-  - `wdt test` -> stops feeding, board resets in ~5 s
-  - `ps` shows `sensor` + `supervisor`; `free` / `list device` normal
-- **Size**: 109,592 B ROM / 8,368 B RAM.
+- **Step 3 complete**: software I2C (swi2c1), AT24C02, SHT20, PC3 ADC light, sensor task.
+- **Step 3 verified on board**:
+  - `i2c scan` -> 0x40 (SHT20), 0x50 (AT24C02)
+  - `sensor` -> T=28.6 C, RH=71.4 %, light≈1.7 V
+  - `at24 write/read` -> round-trip OK
+  - periodic `[sensor]` log every 1 s
+- **Size**: 123,916 B ROM / 8,776 B RAM.
 - **Clock**: HSE 12 MHz ×6 = 72 MHz.
 - **Console**: USART1, PA9/PA10, 115200 8N1.
 
 > Step 2 fix: `IDLE_THREAD_STACK_SIZE` increased from 256 to 512; with EasyFlash/ulog
 > the idle thread overflowed and triggered `thread:tidle0 stack overflow`.
+> Step 3 fix: SHT20 uses no-hold commands 0xF3/0xF5 with 100/50 ms wait; the
+> bit-banged I2C does not support hold-master clock stretching. ADC1 MSP enables
+> the clock and configures PC3 as analog.
 
 ## Layout
 
@@ -105,6 +107,5 @@ msh >
 
 ## Next steps
 
-- Step 3: software I2C + AT24C02 + SHT20 + ADC light
 - Step 4: ESP8266 AT Socket + Wi-Fi/TCP
 - Step 5: application protocol + reconnect/stability

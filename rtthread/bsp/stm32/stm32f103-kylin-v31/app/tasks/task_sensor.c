@@ -4,6 +4,7 @@
 #include "app_ipc.h"
 #include "board_led.h"
 #include "board_key.h"
+#include "svc_sensor.h"
 #include "task_sensor.h"
 
 static struct rt_thread sensor_thread;
@@ -55,9 +56,30 @@ static void task_sensor_entry(void *parameter)
         if ((rt_tick_get() - last_sample) >= rt_tick_from_millisecond(APP_SENSOR_PERIOD_MS))
         {
             app_msg_t msg;
+            app_sensor_sample_t sample;
 
             rt_memset(&msg, 0, sizeof(msg));
             msg.type = APP_MSG_SENSOR;
+
+            if (svc_sensor_sample(&sample) == APP_OK)
+            {
+                int temp_frac = sample.temp_x10 % 10;
+
+                if (temp_frac < 0)
+                {
+                    temp_frac = -temp_frac;
+                }
+
+                msg.u.sensor.temp_x10 = sample.temp_x10;
+                msg.u.sensor.humi_x10 = sample.humi_x10;
+                msg.u.sensor.light = sample.light_mv;
+
+                rt_kprintf("[sensor] T=%d.%d C, RH=%u.%u %%, light=%u mV\n",
+                           sample.temp_x10 / 10, temp_frac,
+                           sample.humi_x10 / 10, sample.humi_x10 % 10,
+                           sample.light_mv);
+            }
+
             app_mq_send(&msg);
             last_sample = rt_tick_get();
         }

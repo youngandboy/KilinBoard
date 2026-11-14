@@ -7,6 +7,7 @@
 #include "board_buzzer.h"
 #include "svc_storage.h"
 #include "svc_watchdog.h"
+#include "svc_sensor.h"
 #include "task_sensor.h"
 #include "task_supervisor.h"
 #include "app_main.h"
@@ -37,6 +38,11 @@ int app_main(void)
     if (svc_storage_init() != APP_OK)
     {
         rt_kprintf("[app] storage init failed\n");
+    }
+
+    if (svc_sensor_init() != APP_OK)
+    {
+        rt_kprintf("[app] sensor init failed\n");
     }
 
     if (svc_watchdog_init() != APP_OK)
