@@ -105,6 +105,30 @@ msh >
   code was adapted; the original NB-IoT application was removed.
 - `packages/`, `build/`, `*.elf`, `*.hex`, `*.bin` are ignored by Git.
 
+## ESP8266 probe (Step 4 pre-check)
+
+USART2 is enabled and a small `esp` msh command resets the module on PA0 and
+forwards one AT command per invocation.
+
+```text
+msh > esp reset
+esp: reset on PA0
+esp: ready
+
+msh > esp AT+GMR
+AT version:1.3.0.0(Jul 14 2016 18:54:01)
+SDK version:2.0.0(5a875ba)
+Farylink Technology Co., Ltd. v1.0.0.2
+May 11 2017 22:23:58
+OK
+WIFI DISCONNECT
+```
+
+Current module firmware is **AT 1.3.0.0 / SDK 2.0.0 (2016)**. This is old;
+`at_device` may need a newer ESP8266 AT firmware (1.7.x) for reliable
+`AT+CIPSTART`/socket behavior. TCP-only operation should still work; upgrade is
+recommended before Step 4 if the module has 1 MB Flash.
+
 ## Next steps
 
 - Step 4: ESP8266 AT Socket + Wi-Fi/TCP
