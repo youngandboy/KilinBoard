@@ -1,4 +1,4 @@
-# RT-Thread port for kyLin-V3.1
+﻿# RT-Thread port for kyLin-V3.1
 
 This directory is part of the `firmware/` Git repository. It contains the
 RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM).
@@ -8,13 +8,15 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 - **Step 1 complete**: RT-Thread v5.3.0 boots, 72 MHz, USART1 msh at 115200.
 - **Step 2 complete**: application skeleton, LED/KEY/buzzer, IWDG, FAL + EasyFlash config, msh commands.
 - **Step 3 complete**: software I2C (swi2c1), AT24C02, SHT20, PC3 ADC light, sensor task.
-- **Step 3 verified on board**:
-  - `i2c scan` -> 0x40 (SHT20), 0x50 (AT24C02)
-  - `sensor` -> T=28.6 C, RH=71.4 %, light≈1.7 V
-  - `at24 write/read` -> round-trip OK
-  - periodic `[sensor]` log every 1 s
-- **Size**: 123,916 B ROM / 8,776 B RAM.
-- **Clock**: HSE 12 MHz ×6 = 72 MHz.
+- **Step 4 complete**: ESP8266 AT Socket, Wi-Fi join, DHCP, DNS, TCP client.
+- **Step 4 verified on board**:
+  - `ifconfig` -> esp0 UP, 192.168.3.138/24, gw 192.168.3.1
+  - `net` -> link up
+  - `net tcp 1.1.1.1 80` -> connected, HTTP 400 response
+  - `net tcp www.baidu.com 80` -> DNS + TCP OK
+  - `AT+CIPDNS?` unsupported on AT 1.3; domain resolution still works via `AT+CIPDOMAIN`
+- **Size**: 216,224 B ROM / 12,432 B RAM.
+- **Clock**: HSE 12 MHz 脳6 = 72 MHz.
 - **Console**: USART1, PA9/PA10, 115200 8N1.
 
 > Step 2 fix: `IDLE_THREAD_STACK_SIZE` increased from 256 to 512; with EasyFlash/ulog
@@ -22,16 +24,19 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 > Step 3 fix: SHT20 uses no-hold commands 0xF3/0xF5 with 100/50 ms wait; the
 > bit-banged I2C does not support hold-master clock stretching. ADC1 MSP enables
 > the clock and configures PC3 as analog.
+> Step 4 fix: AT 1.3.x `AT+CIPSTART` treats the 5th argument as local port, not
+> keepalive; `patches/at_device_esp8266_at130.patch` removes `,60` for old AT.
+> `AT+CIPDNS?` is unsupported; DNS still works through `AT+CIPDOMAIN`.
 
 ## Layout
 
 ```text
 firmware/rtthread/
-├─ README.md
-├─ setup.sh                 # fetch RT-Thread + STM32 HAL/CMSIS packages
-├─ build.sh                 # WSL build wrapper
-└─ bsp/stm32/
-   └─ stm32f103-kylin-v31/  # BSP (board, applications, Kconfig, rtconfig)
+鈹溾攢 README.md
+鈹溾攢 setup.sh                 # fetch RT-Thread, STM32 HAL/CMSIS, EasyFlash, at_device
+鈹溾攢 build.sh                 # WSL build wrapper
+鈹斺攢 bsp/stm32/
+   鈹斺攢 stm32f103-kylin-v31/  # BSP (board, applications, Kconfig, rtconfig)
 ```
 
 The RT-Thread kernel/components are intentionally **not** copied into this
@@ -133,3 +138,4 @@ recommended before Step 4 if the module has 1 MB Flash.
 
 - Step 4: ESP8266 AT Socket + Wi-Fi/TCP
 - Step 5: application protocol + reconnect/stability
+

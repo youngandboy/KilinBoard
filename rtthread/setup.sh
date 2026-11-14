@@ -48,6 +48,24 @@ clone_if_missing \
 clone_if_missing \
     https://github.com/RT-Thread-packages/stm32f1xx-hal-driver.git \
     "$BSP/packages/stm32f1_hal_driver-latest"
+clone_if_missing \
+    https://github.com/armink-rtt-pkgs/EasyFlash.git \
+    "$BSP/packages/EasyFlash-latest"
+clone_if_missing \
+    https://github.com/RT-Thread-packages/at_device.git \
+    "$BSP/packages/at_device-latest"
+
+# ESP8266 AT 1.3.x compatibility: older firmware interprets the 5th
+# AT+CIPSTART argument as a local port, not a keepalive value.
+if [ -d "$BSP/packages/at_device-latest/.git" ]; then
+    (
+        cd "$BSP/packages/at_device-latest"
+        if git apply --check "$HERE/patches/at_device_esp8266_at130.patch" 2>/dev/null; then
+            git apply "$HERE/patches/at_device_esp8266_at130.patch"
+            echo "Applied AT 1.3.x ESP8266 patch."
+        fi
+    )
+fi
 
 echo "RT-Thread root: $RTT_ROOT"
 echo "BSP:            $BSP"

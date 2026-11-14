@@ -8,8 +8,10 @@
 #include "svc_storage.h"
 #include "svc_watchdog.h"
 #include "svc_sensor.h"
+#include "svc_net.h"
 #include "task_sensor.h"
 #include "task_supervisor.h"
+#include "task_net.h"
 #include "app_main.h"
 
 int app_main(void)
@@ -45,6 +47,11 @@ int app_main(void)
         rt_kprintf("[app] sensor init failed\n");
     }
 
+    if (svc_net_init() != APP_OK)
+    {
+        rt_kprintf("[app] net init failed\n");
+    }
+
     if (svc_watchdog_init() != APP_OK)
     {
         rt_kprintf("[app] watchdog init failed\n");
@@ -58,6 +65,11 @@ int app_main(void)
     if (task_sensor_start() != RT_EOK)
     {
         rt_kprintf("[app] sensor start failed\n");
+    }
+
+    if (task_net_start() != RT_EOK)
+    {
+        rt_kprintf("[app] net start failed\n");
     }
 
     rt_kprintf("[app] started\n");

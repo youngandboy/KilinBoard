@@ -20,5 +20,12 @@ path += [os.path.join(cwd, 'tasks')]
 path += [os.path.join(cwd, 'shell')]
 path += [os.path.join(cwd, 'port')]
 
+at_device_inc = os.path.join(cwd, '..', 'packages', 'at_device-latest', 'inc')
+at_device_esp = os.path.join(cwd, '..', 'packages', 'at_device-latest', 'class', 'esp8266')
+if os.path.isdir(at_device_inc):
+    path += [at_device_inc]
+if os.path.isdir(at_device_esp):
+    path += [at_device_esp]
+
 group = DefineGroup('app', src, depend=[''], CPPPATH=path)
 Return('group')
