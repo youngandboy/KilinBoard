@@ -13,6 +13,23 @@ fi
 
 mkdir -p "$BSP/packages"
 
+# RT-Thread Env normally generates this file. Keep it here so a fresh clone
+# can build without running Env/menuconfig.
+cat > "$BSP/packages/SConscript" <<'EOF'
+import os
+from building import *
+
+cwd = GetCurrentDir()
+objs = []
+
+for d in os.listdir(cwd):
+    path = os.path.join(cwd, d)
+    if os.path.isfile(os.path.join(path, 'SConscript')):
+        objs += SConscript(os.path.join(d, 'SConscript'))
+
+Return('objs')
+EOF
+
 clone_if_missing() {
     local url="$1"
     local dest="$2"
