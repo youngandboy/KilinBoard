@@ -9,14 +9,11 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 - **Step 2 complete**: application skeleton, LED/KEY/buzzer, IWDG, FAL + EasyFlash config, msh commands.
 - **Step 3 complete**: software I2C (swi2c1), AT24C02, SHT20, PC3 ADC light, sensor task.
 - **Step 4 complete**: ESP8266 AT Socket, Wi-Fi join, DHCP, DNS, TCP client.
-- **Step 4 verified on board**:
-  - `ifconfig` -> esp0 UP, 192.168.3.138/24, gw 192.168.3.1
-  - `net` -> link up
-  - `net tcp 1.1.1.1 80` -> connected, HTTP 400 response
-  - `net tcp www.baidu.com 80` -> DNS + TCP OK
-  - `AT+CIPDNS?` unsupported on AT 1.3; domain resolution still works via `AT+CIPDOMAIN`
-- **Size**: 216,224 B ROM / 12,432 B RAM.
-- **Clock**: HSE 12 MHz 脳6 = 72 MHz.
+- **Step 5 implemented**: NDJSON uplink, command downlink, local dashboard (`server/server.py`).
+- **Step 5 local dashboard verified**: simulated board data shows in the page; command API returns JSON.
+- **Step 5 board link pending**: Windows firewall blocks inbound TCP 9000 on the Public profile; allow Python/port 9000 and reset the board.
+- **Size**: 219,476 B ROM / 12,952 B RAM.
+- **Clock**: HSE 12 MHz x6 = 72 MHz.
 - **Console**: USART1, PA9/PA10, 115200 8N1.
 
 > Step 2 fix: `IDLE_THREAD_STACK_SIZE` increased from 256 to 512; with EasyFlash/ulog
@@ -110,32 +107,59 @@ msh >
   code was adapted; the original NB-IoT application was removed.
 - `packages/`, `build/`, `*.elf`, `*.hex`, `*.bin` are ignored by Git.
 
-## ESP8266 probe (Step 4 pre-check)
+## Step 5 protocol and local dashboard
 
-USART2 is enabled and a small `esp` msh command resets the module on PA0 and
-forwards one AT command per invocation.
+The board connects to the PC as a TCP client; the PC runs a local TCP collector
+and an HTTP dashboard.
 
 ```text
-msh > esp reset
-esp: reset on PA0
-esp: ready
-
-msh > esp AT+GMR
-AT version:1.3.0.0(Jul 14 2016 18:54:01)
-SDK version:2.0.0(5a875ba)
-Farylink Technology Co., Ltd. v1.0.0.2
-May 11 2017 22:23:58
-OK
-WIFI DISCONNECT
+Board (esp0) -- TCP client --> PC 192.168.3.103:9000
+Browser -> http://localhost:8080
 ```
 
-Current module firmware is **AT 1.3.0.0 / SDK 2.0.0 (2016)**. This is old;
-`at_device` may need a newer ESP8266 AT firmware (1.7.x) for reliable
-`AT+CIPSTART`/socket behavior. TCP-only operation should still work; upgrade is
-recommended before Step 4 if the module has 1 MB Flash.
+Uplink (NDJSON, one JSON object per line):
+
+```json
+{"v":1,"t":"d","seq":1,"up":123,"temp":28.6,"humi":71.4,"light":1593}
+```
+
+Downlink commands:
+
+```json
+{"t":"c","led":0,"on":1}
+{"t":"c","beep":100}
+{"t":"c","period":5}
+```
+
+Run the dashboard on the PC:
+
+```powershell
+cd H:\RTOS\OneNet_Mini\firmware\rtthread\server
+python server.py
+```
+
+Configure the board target (EasyFlash, not committed):
+
+```text
+msh > cfg set srv_host 192.168.3.103
+msh > cfg set srv_port 9000
+msh > cfg save
+```
+
+Windows firewall must allow inbound TCP 9000 for Python on the active profile.
+The current PC is on the **Public** profile, so this one-time admin command is
+needed (or allow Python in Windows Defender Firewall):
+
+```powershell
+New-NetFirewallRule -DisplayName "Kylin TCP 9000" -Direction Inbound `
+  -Profile Any -Action Allow -Protocol TCP -LocalPort 9000
+```
+
+Then reset the board. The page shows temperature, humidity, light, sequence,
+uptime, history, and buttons for LED/beep/upload-period.
 
 ## Next steps
 
-- Step 4: ESP8266 AT Socket + Wi-Fi/TCP
-- Step 5: application protocol + reconnect/stability
+- Allow firewall TCP 9000 and verify board -> PC live data.
+- Optional: reconnect backoff tuning and 24 h stability test.
 

@@ -1,4 +1,4 @@
-#ifndef RT_CONFIG_H__
+﻿#ifndef RT_CONFIG_H__
 #define RT_CONFIG_H__
 
 #define SOC_STM32F103RB

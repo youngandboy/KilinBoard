@@ -5,6 +5,7 @@
 #include "board_led.h"
 #include "board_key.h"
 #include "svc_sensor.h"
+#include "svc_storage.h"
 #include "task_sensor.h"
 
 static struct rt_thread sensor_thread;
@@ -53,35 +54,45 @@ static void task_sensor_entry(void *parameter)
 
         app_event_send(APP_EVT_SENSOR_ALIVE);
 
-        if ((rt_tick_get() - last_sample) >= rt_tick_from_millisecond(APP_SENSOR_PERIOD_MS))
         {
-            app_msg_t msg;
-            app_sensor_sample_t sample;
+            const app_cfg_t *cfg = svc_storage_get();
+            rt_uint32_t period_ms = APP_SENSOR_PERIOD_MS;
 
-            rt_memset(&msg, 0, sizeof(msg));
-            msg.type = APP_MSG_SENSOR;
-
-            if (svc_sensor_sample(&sample) == APP_OK)
+            if ((cfg != RT_NULL) && (cfg->upload_period_s > 0))
             {
-                int temp_frac = sample.temp_x10 % 10;
-
-                if (temp_frac < 0)
-                {
-                    temp_frac = -temp_frac;
-                }
-
-                msg.u.sensor.temp_x10 = sample.temp_x10;
-                msg.u.sensor.humi_x10 = sample.humi_x10;
-                msg.u.sensor.light = sample.light_mv;
-
-                rt_kprintf("[sensor] T=%d.%d C, RH=%u.%u %%, light=%u mV\n",
-                           sample.temp_x10 / 10, temp_frac,
-                           sample.humi_x10 / 10, sample.humi_x10 % 10,
-                           sample.light_mv);
+                period_ms = (rt_uint32_t)cfg->upload_period_s * 1000U;
             }
 
-            app_mq_send(&msg);
-            last_sample = rt_tick_get();
+            if ((rt_tick_get() - last_sample) >= rt_tick_from_millisecond(period_ms))
+            {
+                app_msg_t msg;
+                app_sensor_sample_t sample;
+
+                rt_memset(&msg, 0, sizeof(msg));
+                msg.type = APP_MSG_SENSOR;
+
+                if (svc_sensor_sample(&sample) == APP_OK)
+                {
+                    int temp_frac = sample.temp_x10 % 10;
+
+                    if (temp_frac < 0)
+                    {
+                        temp_frac = -temp_frac;
+                    }
+
+                    msg.u.sensor.temp_x10 = sample.temp_x10;
+                    msg.u.sensor.humi_x10 = sample.humi_x10;
+                    msg.u.sensor.light = sample.light_mv;
+
+                    rt_kprintf("[sensor] T=%d.%d C, RH=%u.%u %%, light=%u mV\n",
+                               sample.temp_x10 / 10, temp_frac,
+                               sample.humi_x10 / 10, sample.humi_x10 % 10,
+                               sample.light_mv);
+                }
+
+                app_mq_send(&msg);
+                last_sample = rt_tick_get();
+            }
         }
 
         rt_thread_mdelay(APP_KEY_SCAN_MS);
