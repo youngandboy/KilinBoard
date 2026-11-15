@@ -16,7 +16,9 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 - **Step 5 stability**: reconnect uses exponential backoff (1–30 s), stale
   queued samples are dropped after reconnect, and `net stat` exposes link,
   connect, TX/RX and error counters.
-- **Size**: 220,604 B ROM / 13,016 B RAM.
+- **Step 6 OTA**: 16 KB bootloader, 232 KB app slot, 232 KB download slot,
+  Ymodem-1K + CRC32 image validation; `ota` / `ota status` verified on board.
+- **Size**: app 221,524 B ROM / 13,024 B RAM; bootloader 4,764 B / 16 KB.
 - **Clock**: HSE 12 MHz x6 = 72 MHz.
 - **Console**: USART1, PA9/PA10, 115200 8N1.
 
@@ -44,11 +46,16 @@ firmware/rtthread/
 ├─ docs/
 │  ├─ architecture.md
 │  └─ verification.md
+├─ ota_layout.h              # shared flash layout / OTA container format
+├─ bootloader/               # one-time OTA bootloader (bare-metal)
 ├─ server/
 │  ├─ server.py              # TCP collector + HTTP dashboard
 │  └─ soak.ps1               # optional long-run API logger
 ├─ tools/
-│  └─ verify-rtthread.ps1    # build / flash / serial / API gate
+│  ├─ verify-rtthread.ps1    # build / flash / serial / API gate
+│  ├─ ota_pack.py            # package rtthread.bin as .ota
+│  ├─ ota_send.ps1           # Ymodem sender
+│  └─ verify-ota.ps1         # end-to-end OTA gate
 └─ bsp/stm32/
    └─ stm32f103-kylin-v31/   # BSP (board, applications, Kconfig, rtconfig)
 ```
@@ -95,14 +102,21 @@ rt-thread.hex
 rtthread.bin
 ```
 
+`build.sh` also builds `bootloader/build/bootloader.hex` and `.bin`. The app
+starts at `0x08004000`; the bootloader at `0x08000000` is required for the app
+to boot after the OTA layout change.
+
 ## Flash
 
-From Windows:
+From Windows, flash the bootloader first and then the app:
 
 ```powershell
 cd H:\RTOS\OneNet_Mini\firmware
+.\flash.bat "rtthread\bootloader\build\bootloader.hex"
 .\flash.bat "rtthread\bsp\stm32\stm32f103-kylin-v31\rt-thread.hex"
 ```
+
+The one-command gate below does both automatically.
 
 Then open the USART1 debug port (CH340, 115200 8N1). Expected:
 
@@ -212,6 +226,48 @@ New-NetFirewallRule -DisplayName "Kylin TCP 9000" -Direction Inbound `
 
 Then reset the board. The page shows temperature, humidity, light, sequence,
 uptime, history, and buttons for LED/beep/upload-period.
+
+## OTA over Ymodem
+
+The app now lives at `0x08004000`. A small bootloader at `0x08000000` owns the
+Ymodem receiver and copies a validated image into the app slot. EasyFlash stays
+at `0x08078000`, so Wi-Fi/server configuration is preserved.
+
+Start an update:
+
+```text
+msh > ota
+```
+
+The board reboots to the bootloader. Package and send from the PC:
+
+```powershell
+cd H:\RTOS\OneNet_Mini\firmware\rtthread
+
+python .\tools\ota_pack.py .\bsp\stm32\stm32f103-kylin-v31\rtthread.bin `
+    -o .\rtthread.ota --version 0x1234
+
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\ota_send.ps1 `
+    -Port COM3 -Image .\rtthread.ota
+```
+
+The bootloader validates the container magic, image size, header CRC32 and image
+CRC32, copies the payload, verifies it again, then boots the new app. Check the
+stored version:
+
+```text
+msh > ota status
+```
+
+End-to-end automated gate:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\verify-ota.ps1 -Port COM3
+```
+
+See [`docs/ota.md`](docs/ota.md) for the partition table, metadata format, failure
+handling, and recovery. Hold KEY1 (PC13, active low) while resetting to force the
+bootloader for recovery.
 
 ## Next steps
 

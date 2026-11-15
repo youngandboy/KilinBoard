@@ -57,9 +57,9 @@ python H:\RTOS\OneNet_Mini\firmware\rtthread\server\server.py
 
 | 检查 | 通过条件 |
 | --- | --- |
-| `BUILD_OK` | `build.sh` 返回 0，生成 `rt-thread.elf` / `.hex` |
-| `SIZE_OK` | ROM ≤ 512 KB，RAM（data + bss）≤ 64 KB |
-| `FLASH_OK` | `flash.bat` 返回 0，且输出包含 `Flash OK` |
+| `BUILD_OK` | `build.sh` 返回 0，生成 App `rt-thread.elf/.hex` 和 Bootloader `.hex` |
+| `SIZE_OK` | App ROM ≤ 232 KB，RAM（data + bss）≤ 64 KB |
+| `FLASH_OK` | Bootloader 和 App 均烧录成功，输出包含 `Flash OK` |
 | `RESET_OK` | ST-LINK CLI 复位成功 |
 | `SERIAL_OK` | 抓到 RT-Thread banner、`[app] started`、至少一条 `[sensor]` |
 | `API_OK` | `/api/data` 返回 `connected=true`，且有 30 秒内的 `last` 数据 |
@@ -109,6 +109,7 @@ python H:\RTOS\OneNet_Mini\firmware\rtthread\server\server.py
 rtthread/logs/rtthread-verify-<yyyyMMdd-HHmmss>/
   build.log
   size.txt
+  flash-boot.log
   flash.log
   reset.log
   serial.log
@@ -120,9 +121,9 @@ rtthread/logs/rtthread-verify-<yyyyMMdd-HHmmss>/
 例如：
 
 ```text
-| BUILD_OK | OK | see build.log |
-| SIZE_OK | OK | ROM=220604 B, RAM=13012 B |
-| FLASH_OK | OK | see flash.log |
+| BUILD_OK | OK | bootloader + app |
+| SIZE_OK | OK | ROM=221524 B, RAM=13024 B |
+| FLASH_OK | OK | bootloader + app |
 | SERIAL_OK | OK | banner=True app=True sensor=True |
 | API_OK | OK | seq=0 age=0.2s |
 ```
@@ -157,5 +158,7 @@ msh > net stat
 - 脚本不会执行全片擦除（不传 `-Full`）。
 - 24 小时稳定性测试是独立项，见 `server/soak.ps1`；本脚本只做一次
   构建 / 烧录 / 启动 / 数据闭环验证。
+- OTA 功能使用独立的端到端门禁：
+  `tools\verify-ota.ps1`，说明见 `docs/ota.md`。
 - 如果只想检查裸机工程，继续使用 `firmware/tools/verify-board.ps1`，不要
   删除或改写那套门禁。

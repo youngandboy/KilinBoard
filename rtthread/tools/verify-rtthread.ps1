@@ -199,8 +199,8 @@ try {
         }
 
         if (($null -ne $rom) -and ($null -ne $ram)) {
-            $sizeOk = (($rom -le 524288) -and ($ram -le 65536))
-            Add-Check "SIZE_OK" $sizeOk "ROM=$rom B, RAM=$ram B"
+            $sizeOk = (($rom -le 237568) -and ($ram -le 65536))
+            Add-Check "SIZE_OK" $sizeOk "ROM=$rom B / 232 KB, RAM=$ram B"
         }
         else {
             Add-Check "SIZE_OK" $false "could not parse ROM/RAM from ELF or build output"
