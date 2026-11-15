@@ -3,6 +3,22 @@
 This directory is part of the `firmware/` Git repository. It contains the
 RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM).
 
+## Showcase
+
+<p align="center">
+  <img src="docs/assets/github-banner.png" alt="kyLin-V3.1 board: USART1 console and live dashboard">
+</p>
+
+<p align="center">
+  <img src="docs/assets/serial-console.png" width="48%" alt="USART1 console with boot, ADXL362, network and OTA commands">
+  <img src="docs/assets/dashboard.png" width="48%" alt="Live temperature, humidity, light, acceleration, pitch and roll dashboard">
+</p>
+
+Screenshots were captured from the running board and local dashboard. The
+serial console shows the boot banner, ADXL362 bring-up, sensor read, FIFO/DMA
+sample, network statistics and OTA status. The Wi-Fi SSID is masked in the
+published image.
+
 ## Current status
 
 - **Step 1 complete**: RT-Thread v5.3.0 boots, 72 MHz, USART1 msh at 115200.
