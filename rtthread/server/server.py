@@ -200,6 +200,7 @@ INDEX_HTML = r"""<!doctype html>
     <div class="card"><div class="label">温度</div><div><span id="temp" class="value">--</span><span class="unit">°C</span></div></div>
     <div class="card"><div class="label">湿度</div><div><span id="humi" class="value">--</span><span class="unit">%RH</span></div></div>
     <div class="card"><div class="label">光照</div><div><span id="light" class="value">--</span><span class="unit">mV</span></div></div>
+    <div class="card"><div class="label">加速度 X / Y / Z</div><div class="value" style="font-size:22px"><span id="ax">--</span> <span class="unit">/</span> <span id="ay">--</span> <span class="unit">/</span> <span id="az">--</span><span class="unit">mg</span></div></div>
     <div class="card"><div class="label">序号 / 运行时间</div><div class="value" style="font-size:22px"><span id="seq">--</span> <span class="unit">/</span> <span id="uptime">--</span><span class="unit">s</span></div></div>
   </div>
 
@@ -225,8 +226,8 @@ INDEX_HTML = r"""<!doctype html>
   <div class="section-title">最近数据</div>
   <div class="card">
     <table>
-      <thead><tr><th>时间</th><th>seq</th><th>温度</th><th>湿度</th><th>光照</th></tr></thead>
-      <tbody id="history"><tr><td colspan="5" class="muted">等待数据…</td></tr></tbody>
+      <thead><tr><th>时间</th><th>seq</th><th>温度</th><th>湿度</th><th>光照</th><th>ax</th><th>ay</th><th>az</th></tr></thead>
+      <tbody id="history"><tr><td colspan="8" class="muted">等待数据…</td></tr></tbody>
     </table>
   </div>
 
@@ -263,6 +264,9 @@ async function poll() {
       $('temp').textContent = fmt(d.temp);
       $('humi').textContent = fmt(d.humi);
       $('light').textContent = d.light ?? '--';
+      $('ax').textContent = d.ax ?? '--';
+      $('ay').textContent = d.ay ?? '--';
+      $('az').textContent = d.az ?? '--';
       $('seq').textContent = d.seq ?? '--';
       $('uptime').textContent = d.up ?? '--';
       lastRecv = Date.now();
@@ -271,9 +275,9 @@ async function poll() {
 
     const rows = (j.history || []).slice().reverse().slice(0, 20).map(x => {
       const t = x._recv ? new Date(x._recv * 1000).toLocaleTimeString() : '--';
-      return `<tr><td>${t}</td><td>${x.seq ?? '--'}</td><td>${fmt(x.temp)} °C</td><td>${fmt(x.humi)} %</td><td>${x.light ?? '--'} mV</td></tr>`;
+      return `<tr><td>${t}</td><td>${x.seq ?? '--'}</td><td>${fmt(x.temp)} °C</td><td>${fmt(x.humi)} %</td><td>${x.light ?? '--'} mV</td><td>${x.ax ?? '--'}</td><td>${x.ay ?? '--'}</td><td>${x.az ?? '--'}</td></tr>`;
     });
-    $('history').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="5" class="muted">等待数据…</td></tr>';
+    $('history').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="8" class="muted">等待数据…</td></tr>';
   } catch (e) {
     $('status').className = 'badge off';
     $('status').textContent = '网页服务未连接';

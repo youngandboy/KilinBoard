@@ -122,7 +122,7 @@ rtthread/logs/rtthread-verify-<yyyyMMdd-HHmmss>/
 
 ```text
 | BUILD_OK | OK | bootloader + app |
-| SIZE_OK | OK | ROM=221524 B, RAM=13024 B |
+| SIZE_OK | OK | ROM=223232 B, RAM=13116 B |
 | FLASH_OK | OK | bootloader + app |
 | SERIAL_OK | OK | banner=True app=True sensor=True |
 | API_OK | OK | seq=0 age=0.2s |
@@ -160,5 +160,7 @@ msh > net stat
   构建 / 烧录 / 启动 / 数据闭环验证。
 - OTA 功能使用独立的端到端门禁：
   `tools\verify-ota.ps1`，说明见 `docs/ota.md`。
+- ADXL362 可用 `msh > adxl id` / `adxl read` 手动检查，说明见
+  `docs/adxl362.md`。
 - 如果只想检查裸机工程，继续使用 `firmware/tools/verify-board.ps1`，不要
   删除或改写那套门禁。

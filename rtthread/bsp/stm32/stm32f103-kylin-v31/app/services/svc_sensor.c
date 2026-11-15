@@ -4,6 +4,7 @@
 #include "drv_at24c02.h"
 #include "drv_sht20.h"
 #include "drv_light.h"
+#include "drv_adxl362.h"
 #include "svc_sensor.h"
 
 int svc_sensor_init(void)
@@ -25,6 +26,12 @@ int svc_sensor_init(void)
     if (drv_light_init() != APP_OK)
     {
         rt_kprintf("[sensor] light init failed\n");
+        result = APP_ERR;
+    }
+
+    if (drv_adxl362_init() != APP_OK)
+    {
+        rt_kprintf("[sensor] adxl362 init failed\n");
         result = APP_ERR;
     }
 
@@ -58,5 +65,21 @@ int svc_sensor_sample(app_sensor_sample_t *sample)
         rt_kprintf("[sensor] light read failed\n");
     }
 
-    return (sample->valid == 0x03) ? APP_OK : APP_ERR;
+    {
+        adxl362_xyz_t xyz;
+
+        if (drv_adxl362_read(&xyz) == APP_OK)
+        {
+            sample->acc_x_mg = xyz.x_mg;
+            sample->acc_y_mg = xyz.y_mg;
+            sample->acc_z_mg = xyz.z_mg;
+            sample->valid |= 0x04;
+        }
+        else
+        {
+            rt_kprintf("[sensor] adxl362 read failed\n");
+        }
+    }
+
+    return ((sample->valid & 0x03) == 0x03) ? APP_OK : APP_ERR;
 }

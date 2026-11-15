@@ -8,6 +8,8 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 - **Step 1 complete**: RT-Thread v5.3.0 boots, 72 MHz, USART1 msh at 115200.
 - **Step 2 complete**: application skeleton, LED/KEY/buzzer, IWDG, FAL + EasyFlash config, msh commands.
 - **Step 3 complete**: software I2C (swi2c1), AT24C02, SHT20, PC3 ADC light, sensor task.
+- **Step 3b complete**: ADXL362 on SPI1 (PA4 CS/PA5 SCK/PA6 MISO/PA7 MOSI),
+  2 g / 100 Hz, `adxl id` / `adxl read`, acceleration included in telemetry.
 - **Step 4 complete**: ESP8266 AT Socket, Wi-Fi join, DHCP, DNS, TCP client.
 - **Step 5 complete**: NDJSON uplink, command downlink, local dashboard (`server/server.py`).
 - **Step 5 verified on board**: live temperature/humidity/light frames reach the PC;
@@ -18,7 +20,7 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
   connect, TX/RX and error counters.
 - **Step 6 OTA**: 16 KB bootloader, 232 KB app slot, 232 KB download slot,
   Ymodem-1K + CRC32 image validation; `ota` / `ota status` verified on board.
-- **Size**: app 221,524 B ROM / 13,024 B RAM; bootloader 4,764 B / 16 KB.
+- **Size**: app 223,232 B ROM / 13,120 B RAM; bootloader 4,764 B / 16 KB.
 - **Clock**: HSE 12 MHz x6 = 72 MHz.
 - **Console**: USART1, PA9/PA10, 115200 8N1.
 
@@ -45,6 +47,7 @@ firmware/rtthread/
 ├─ build.sh                  # WSL build wrapper
 ├─ docs/
 │  ├─ architecture.md
+│  ├─ adxl362.md
 │  └─ verification.md
 ├─ ota_layout.h              # shared flash layout / OTA container format
 ├─ bootloader/               # one-time OTA bootloader (bare-metal)
@@ -168,8 +171,11 @@ Browser -> http://localhost:8080
 Uplink (NDJSON, one JSON object per line):
 
 ```json
-{"v":1,"t":"d","seq":1,"up":123,"temp":28.6,"humi":71.4,"light":1593}
+{"v":1,"t":"d","seq":1,"up":123,"temp":28.6,"humi":71.4,"light":1593,
+ "ax":25,"ay":-16,"az":1163}
 ```
+
+`ax`/`ay`/`az` are ADXL362 acceleration in mg.
 
 Downlink commands:
 
@@ -224,8 +230,31 @@ New-NetFirewallRule -DisplayName "Kylin TCP 9000" -Direction Inbound `
   -Profile Any -Action Allow -Protocol TCP -LocalPort 9000
 ```
 
-Then reset the board. The page shows temperature, humidity, light, sequence,
-uptime, history, and buttons for LED/beep/upload-period.
+Then reset the board. The page shows temperature, humidity, light, acceleration,
+sequence, uptime, history, and buttons for LED/beep/upload-period.
+
+## ADXL362
+
+The board's ADXL362 is on SPI1:
+
+```text
+PA4 CS, PA5 SCK, PA6 MISO, PA7 MOSI
+INT1 = PB0, INT2 = PA8 (reserved; polling mode is used)
+```
+
+The driver uses direct SPI1 registers (no extra RT-Thread SPI HAL code) and
+configures 2 g range, 100 Hz ODR, mode 3, 4.5 MHz.
+
+```text
+msh > adxl id
+adxl: devid=0xad partid=0xf2
+
+msh > adxl read
+adxl: X=24 mg Y=-9 mg Z=1163 mg
+```
+
+The sensor task includes the three axes in the NDJSON uplink. See
+[`docs/adxl362.md`](docs/adxl362.md).
 
 ## OTA over Ymodem
 

@@ -31,6 +31,12 @@
 #define APP_LIGHT_ADC_DEV       "adc1"
 #define APP_LIGHT_ADC_CHANNEL   13
 
+/* SPI1 ADXL362: CS PA4, SCK PA5, MISO PA6, MOSI PA7, INT1 PB0, INT2 PA8. */
+#define APP_ADXL362_SPI_BUS     "spi1"
+#define APP_ADXL362_CS_PIN      GET_PIN(A, 4)
+#define APP_ADXL362_INT1_PIN    GET_PIN(B, 0)
+#define APP_ADXL362_INT2_PIN    GET_PIN(A, 8)
+
 /* --------------------------------------------------------------------------
  * ESP8266 (USART2)
  * -------------------------------------------------------------------------- */

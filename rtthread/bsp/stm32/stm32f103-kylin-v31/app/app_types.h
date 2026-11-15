@@ -39,6 +39,9 @@ typedef struct
             rt_int16_t temp_x10;
             rt_uint16_t humi_x10;
             rt_uint16_t light;
+            rt_int16_t acc_x_mg;
+            rt_int16_t acc_y_mg;
+            rt_int16_t acc_z_mg;
         } sensor;
 
         struct
@@ -59,7 +62,10 @@ typedef struct
     rt_int16_t temp_x10;
     rt_uint16_t humi_x10;
     rt_uint16_t light_mv;
-    rt_uint8_t valid;   /* bit0: SHT20, bit1: light */
+    rt_int16_t acc_x_mg;
+    rt_int16_t acc_y_mg;
+    rt_int16_t acc_z_mg;
+    rt_uint8_t valid;   /* bit0: SHT20, bit1: light, bit2: ADXL362 */
 } app_sensor_sample_t;
 
 #define APP_EVT_SENSOR_ALIVE    (1UL << 0)

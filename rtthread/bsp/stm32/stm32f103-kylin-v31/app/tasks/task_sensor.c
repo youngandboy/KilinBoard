@@ -83,11 +83,16 @@ static void task_sensor_entry(void *parameter)
                     msg.u.sensor.temp_x10 = sample.temp_x10;
                     msg.u.sensor.humi_x10 = sample.humi_x10;
                     msg.u.sensor.light = sample.light_mv;
+                    msg.u.sensor.acc_x_mg = sample.acc_x_mg;
+                    msg.u.sensor.acc_y_mg = sample.acc_y_mg;
+                    msg.u.sensor.acc_z_mg = sample.acc_z_mg;
 
-                    rt_kprintf("[sensor] T=%d.%d C, RH=%u.%u %%, light=%u mV\n",
+                    rt_kprintf("[sensor] T=%d.%d C, RH=%u.%u %%, light=%u mV, "
+                               "acc=%d/%d/%d mg\n",
                                sample.temp_x10 / 10, temp_frac,
                                sample.humi_x10 / 10, sample.humi_x10 % 10,
-                               sample.light_mv);
+                               sample.light_mv,
+                               sample.acc_x_mg, sample.acc_y_mg, sample.acc_z_mg);
                 }
 
                 app_mq_send(&msg);
