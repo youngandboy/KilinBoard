@@ -1,4 +1,4 @@
-#include <rtthread.h>
+﻿#include <rtthread.h>
 #include <rtdevice.h>
 #include <board.h>
 #include "app_config.h"
@@ -31,7 +31,6 @@
 #define ADXL_FILTER_2G_100HZ  0x03
 #define ADXL_POWER_MEASURE    0x02
 #define ADXL_INTMAP_DATA_READY  0x01
-#define ADXL_INTMAP_FIFO_WM     0x04
 #define ADXL_FIFO_STREAM        0x02
 #define ADXL_FIFO_SAMPLES       16
 
@@ -44,6 +43,7 @@
 static int adxl_ready;
 static struct rt_mutex adxl_lock;
 static volatile rt_uint32_t adxl_irq_total;
+static volatile rt_uint32_t adxl_int2_irq_total;
 static rt_int16_t adxl_off_x;
 static rt_int16_t adxl_off_y;
 static rt_int16_t adxl_off_z;
@@ -52,6 +52,12 @@ static void adxl_int1_callback(void *args)
 {
     (void)args;
     adxl_irq_total++;
+}
+
+static void adxl_int2_callback(void *args)
+{
+    (void)args;
+    adxl_int2_irq_total++;
 }
 
 static void adxl_spi_init(void)
@@ -173,9 +179,9 @@ int drv_adxl362_init(void)
         return APP_ERR_IO;
     }
 
-    /* INT1 = data ready, INT2 = FIFO watermark (reserved for batch reads). */
+    /* Both INT1 and INT2 expose data-ready; FIFO reads are polled. */
     adxl_write_reg(ADXL_REG_INTMAP1, ADXL_INTMAP_DATA_READY);
-    adxl_write_reg(ADXL_REG_INTMAP2, ADXL_INTMAP_FIFO_WM);
+    adxl_write_reg(ADXL_REG_INTMAP2, ADXL_INTMAP_DATA_READY);
     rt_pin_mode(APP_ADXL362_INT1_PIN, PIN_MODE_INPUT_PULLDOWN);
     rt_pin_mode(APP_ADXL362_INT2_PIN, PIN_MODE_INPUT_PULLDOWN);
     if (rt_pin_attach_irq(APP_ADXL362_INT1_PIN, PIN_IRQ_MODE_RISING,
@@ -186,6 +192,16 @@ int drv_adxl362_init(void)
     else
     {
         rt_pin_irq_enable(APP_ADXL362_INT1_PIN, PIN_IRQ_ENABLE);
+    }
+
+    if (rt_pin_attach_irq(APP_ADXL362_INT2_PIN, PIN_IRQ_MODE_RISING,
+                          adxl_int2_callback, RT_NULL) != RT_EOK)
+    {
+        rt_kprintf("[adxl] int2 attach failed\n");
+    }
+    else
+    {
+        rt_pin_irq_enable(APP_ADXL362_INT2_PIN, PIN_IRQ_ENABLE);
     }
 
     /* 2 g range, 100 Hz ODR, then measurement mode. */
@@ -312,6 +328,11 @@ void drv_adxl362_get_offsets(rt_int16_t *x, rt_int16_t *y, rt_int16_t *z)
 rt_uint32_t drv_adxl362_irq_count(void)
 {
     return adxl_irq_total;
+}
+
+rt_uint32_t drv_adxl362_int2_irq_count(void)
+{
+    return adxl_int2_irq_total;
 }
 
 int drv_adxl362_read_fifo(adxl362_xyz_t *samples, rt_uint32_t capacity, rt_uint32_t *count)

@@ -1,4 +1,4 @@
-#include <rtthread.h>
+﻿#include <rtthread.h>
 #include "app_types.h"
 #include "drv_adxl362.h"
 
@@ -43,8 +43,9 @@ static int cmd_adxl(int argc, char **argv)
 
     if ((argc > 1) && (rt_strcmp(argv[1], "irq") == 0))
     {
-        rt_kprintf("adxl: INT1 data-ready count=%u\n",
-                   (unsigned int)drv_adxl362_irq_count());
+        rt_kprintf("adxl: INT1 data-ready count=%u, INT2 data-ready count=%u\n",
+                   (unsigned int)drv_adxl362_irq_count(),
+                   (unsigned int)drv_adxl362_int2_irq_count());
         return 0;
     }
 

@@ -122,7 +122,7 @@ rtthread/logs/rtthread-verify-<yyyyMMdd-HHmmss>/
 
 ```text
 | BUILD_OK | OK | bootloader + app |
-| SIZE_OK | OK | ROM=225620 B, RAM=13220 B |
+| SIZE_OK | OK | ROM=225780 B, RAM=13220 B |
 | FLASH_OK | OK | bootloader + app |
 | SERIAL_OK | OK | banner=True app=True sensor=True |
 | API_OK | OK | seq=0 age=0.2s |

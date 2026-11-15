@@ -1,4 +1,4 @@
-# ADXL362 三轴加速度计
+﻿# ADXL362 三轴加速度计
 
 > 驱动：`app/drivers/drv_adxl362.c`
 > 命令：`app/shell/msh_adxl.c`
@@ -17,7 +17,7 @@ kyLin-V3.1 的 U8 为 ADXL362，使用 SPI1：
 | MISO | PA6 |
 | MOSI | PA7 |
 | INT1 | PB0，数据就绪中断 |
-| INT2 | PA8，FIFO 水位中断（已映射，当前不注册 ISR） |
+| INT2 \| PA8，数据就绪中断 |
 
 驱动使用 SPI1 硬件外设，直接操作寄存器，不依赖 RT-Thread SPI
 设备框架，避免引入额外的 SPI HAL 代码。
@@ -39,8 +39,8 @@ SPI 参数：
 1. 配置 PA4–PA7 和 SPI1。
 2. 软复位 ADXL362（写 `0x52` 到 `0x1F`）。
 3. 读取 `DEVID_AD`（期望 `0xAD`）和 `PARTID`（期望 `0xF2`）。
-4. 配置 `INTMAP1 = DATA_READY`，`INTMAP2 = FIFO_WATERMARK`。
-5. PB0 配置为下拉输入、上升沿中断；PA8 配置为下拉输入。
+4. 配置 `INTMAP1 = DATA_READY`，`INTMAP2 = DATA_READY`。
+5. PB0/PA8 配置为下拉输入、上升沿中断。
 6. 配置 `FILTER_CTL = 0x03`：±2 g、100 Hz ODR。
 7. 配置 `POWER_CTL = 0x02`：测量模式。
 8. 等待 20 ms，让第一组数据有效。
@@ -88,7 +88,7 @@ msh > adxl reset
 adxl: calibration cleared
 
 msh > adxl irq
-adxl: INT1 data-ready count=32
+adxl: INT1 data-ready count=32, INT2 data-ready count=32
 
 msh > adxl fifo
 adxl: fifo samples=16 first=48/103/1159 last=49/107/1155 mg
@@ -107,7 +107,7 @@ adxl: fifo samples=16 first=48/103/1159 last=49/107/1155 mg
 
 ### INT1 数据就绪中断
 
-INT1（PB0）已映射 DATA_READY，使用上升沿 EXTI。`adxl irq` 显示累计次数。
+INT1（PB0）和 INT2（PA8）均映射 DATA_READY，使用上升沿 EXTI。`adxl irq` 显示两路累计次数。
 常规传感器采集仍按上传周期读取；中断计数用于确认数据就绪和链路健康。
 
 ### FIFO 批量读取
@@ -147,7 +147,7 @@ B11:B0 为 12 位数据；每组样点按 X、Y、Z 排列。驱动按轴类型�
 | `id mismatch dev=0x00 part=0x00` | 检查 PA4–PA7、3.3 V、CS 是否接对 |
 | `id mismatch dev=0xff part=0xff` | MISO 未连接或 SPI 模式错误 |
 | ID 正常但数据全 0 | 确认 `POWER_CTL` 已进入测量模式；等待 ≥20 ms |
-| `adxl irq` 不增长 | 检查 PB0、INTMAP1、EXTI0；INT1 默认高有效 |
+| `adxl irq` 不增长 | 检查 PB0/PA8、INTMAP1/INTMAP2、EXTI0/EXTI8；默认高有效 |
 | FIFO 数据异常 | 检查 FIFO 每项 2 字节格式，不要按 6 字节直接分组 |
 | 网页没有 ax/ay/az | 确认服务端已重启，浏览器刷新页面 |
 
@@ -157,5 +157,5 @@ B11:B0 为 12 位数据；每组样点按 X、Y、Z 排列。驱动按轴类型�
 
 - 将零偏写入 EasyFlash，掉电保持。
 - 使用 INT1 唤醒采样任务，替代周期轮询。
-- 使用 INT2 FIFO 水位中断和 DMA 批量读取。
+- 将 INT2 改为 FIFO 水位中断，并配合 DMA 批量读取。
 - 增加姿态融合/倾斜角平滑。
