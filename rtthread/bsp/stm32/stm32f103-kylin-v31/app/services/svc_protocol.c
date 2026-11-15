@@ -46,13 +46,14 @@ int svc_protocol_encode_sensor(char *buf, rt_size_t size, rt_uint32_t seq,
     len = rt_snprintf(buf, size,
                       "{\"v\":1,\"t\":\"d\",\"seq\":%u,\"up\":%u,"
                       "\"temp\":%d.%d,\"humi\":%u.%u,\"light\":%u,"
-                      "\"ax\":%d,\"ay\":%d,\"az\":%d}\n",
+                      "\"ax\":%d,\"ay\":%d,\"az\":%d,\"valid\":%u}\n",
                       (unsigned int)seq,
                       (unsigned int)(rt_tick_get() / RT_TICK_PER_SECOND),
                       sample->temp_x10 / 10, temp_frac,
                       sample->humi_x10 / 10, sample->humi_x10 % 10,
                       sample->light_mv,
-                      sample->acc_x_mg, sample->acc_y_mg, sample->acc_z_mg);
+                      sample->acc_x_mg, sample->acc_y_mg, sample->acc_z_mg,
+                      (unsigned int)sample->valid);
 
     if ((len < 0) || ((rt_size_t)len >= size))
     {

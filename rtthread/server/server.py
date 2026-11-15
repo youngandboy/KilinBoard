@@ -201,6 +201,7 @@ INDEX_HTML = r"""<!doctype html>
     <div class="card"><div class="label">湿度</div><div><span id="humi" class="value">--</span><span class="unit">%RH</span></div></div>
     <div class="card"><div class="label">光照</div><div><span id="light" class="value">--</span><span class="unit">mV</span></div></div>
     <div class="card"><div class="label">加速度 X / Y / Z</div><div class="value" style="font-size:22px"><span id="ax">--</span> <span class="unit">/</span> <span id="ay">--</span> <span class="unit">/</span> <span id="az">--</span><span class="unit">mg</span></div></div>
+    <div class="card"><div class="label">倾角 Pitch / Roll</div><div class="value" style="font-size:22px"><span id="pitch">--</span> <span class="unit">/</span> <span id="roll">--</span><span class="unit">°</span></div></div>
     <div class="card"><div class="label">序号 / 运行时间</div><div class="value" style="font-size:22px"><span id="seq">--</span> <span class="unit">/</span> <span id="uptime">--</span><span class="unit">s</span></div></div>
   </div>
 
@@ -251,6 +252,8 @@ function beep() { sendCmd({t:'c', beep: Number($('beepMs').value)}); }
 function period() { sendCmd({t:'c', period: Number($('period').value)}); }
 
 function fmt(x, digits=1) { return (x === null || x === undefined) ? '--' : Number(x).toFixed(digits); }
+function pitch(x, y, z) { return (x === null || x === undefined || y === null || y === undefined || z === null || z === undefined) ? null : Math.atan2(y, Math.sqrt(x*x + z*z)) * 180 / Math.PI; }
+function roll(x, y, z) { return (x === null || x === undefined || y === null || y === undefined || z === null || z === undefined) ? null : Math.atan2(x, Math.sqrt(y*y + z*z)) * 180 / Math.PI; }
 
 async function poll() {
   try {
@@ -267,6 +270,8 @@ async function poll() {
       $('ax').textContent = d.ax ?? '--';
       $('ay').textContent = d.ay ?? '--';
       $('az').textContent = d.az ?? '--';
+      $('pitch').textContent = fmt(pitch(d.ax, d.ay, d.az), 1);
+      $('roll').textContent = fmt(roll(d.ax, d.ay, d.az), 1);
       $('seq').textContent = d.seq ?? '--';
       $('uptime').textContent = d.up ?? '--';
       lastRecv = Date.now();

@@ -42,6 +42,7 @@ typedef struct
             rt_int16_t acc_x_mg;
             rt_int16_t acc_y_mg;
             rt_int16_t acc_z_mg;
+            rt_uint8_t valid;
         } sensor;
 
         struct

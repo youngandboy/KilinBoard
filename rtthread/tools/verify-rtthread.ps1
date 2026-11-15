@@ -328,14 +328,15 @@ try {
         $hasBanner = $serialText -match "Thread Operating System"
         $hasApp = $serialText -match "\[app\] started"
         $hasSensor = $serialText -match "\[sensor\]"
+        $hasAdxl = $serialText -match "\[adxl\] init ok"
         $serialOk = if ($NoReset) {
-            $hasSensor
+            $hasSensor -and $hasAdxl
         }
         else {
-            $hasBanner -and $hasApp -and $hasSensor
+            $hasBanner -and $hasApp -and $hasSensor -and $hasAdxl
         }
 
-        Add-Check "SERIAL_OK" $serialOk "banner=$hasBanner app=$hasApp sensor=$hasSensor no_reset=$NoReset"
+        Add-Check "SERIAL_OK" $serialOk "banner=$hasBanner app=$hasApp sensor=$hasSensor adxl=$hasAdxl no_reset=$NoReset"
         if (-not $serialOk) {
             throw "serial assertions failed"
         }

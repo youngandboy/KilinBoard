@@ -61,7 +61,7 @@ python H:\RTOS\OneNet_Mini\firmware\rtthread\server\server.py
 | `SIZE_OK` | App ROM ≤ 232 KB，RAM（data + bss）≤ 64 KB |
 | `FLASH_OK` | Bootloader 和 App 均烧录成功，输出包含 `Flash OK` |
 | `RESET_OK` | ST-LINK CLI 复位成功 |
-| `SERIAL_OK` | 抓到 RT-Thread banner、`[app] started`、至少一条 `[sensor]` |
+| `SERIAL_OK` | 抓到 banner、`[app] started`、至少一条 `[sensor]`、`[adxl] init ok` |
 | `API_OK` | `/api/data` 返回 `connected=true`，且有 30 秒内的 `last` 数据 |
 
 串口断言使用 `Thread Operating System`，因为 RT-Thread banner 中
@@ -122,7 +122,7 @@ rtthread/logs/rtthread-verify-<yyyyMMdd-HHmmss>/
 
 ```text
 | BUILD_OK | OK | bootloader + app |
-| SIZE_OK | OK | ROM=223232 B, RAM=13116 B |
+| SIZE_OK | OK | ROM=225620 B, RAM=13220 B |
 | FLASH_OK | OK | bootloader + app |
 | SERIAL_OK | OK | banner=True app=True sensor=True |
 | API_OK | OK | seq=0 age=0.2s |

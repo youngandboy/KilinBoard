@@ -202,7 +202,7 @@ static void task_net_entry(void *parameter)
                     sample.acc_x_mg = msg.u.sensor.acc_x_mg;
                     sample.acc_y_mg = msg.u.sensor.acc_y_mg;
                     sample.acc_z_mg = msg.u.sensor.acc_z_mg;
-                    sample.valid = 0x07;
+                    sample.valid = msg.u.sensor.valid;
 
                     len = svc_protocol_encode_sensor(tx_buf, sizeof(tx_buf),
                                                      tx_seq++, &sample);

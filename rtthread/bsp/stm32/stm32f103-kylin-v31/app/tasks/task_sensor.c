@@ -86,6 +86,7 @@ static void task_sensor_entry(void *parameter)
                     msg.u.sensor.acc_x_mg = sample.acc_x_mg;
                     msg.u.sensor.acc_y_mg = sample.acc_y_mg;
                     msg.u.sensor.acc_z_mg = sample.acc_z_mg;
+                    msg.u.sensor.valid = sample.valid;
 
                     rt_kprintf("[sensor] T=%d.%d C, RH=%u.%u %%, light=%u mV, "
                                "acc=%d/%d/%d mg\n",
