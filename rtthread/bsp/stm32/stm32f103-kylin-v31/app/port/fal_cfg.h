@@ -15,8 +15,10 @@ extern const struct fal_flash_dev stm32_onchip_flash;
 #ifdef FAL_PART_HAS_TABLE_CFG
 #define FAL_PART_TABLE                                                              \
 {                                                                                   \
-    {FAL_PART_MAGIC_WORD, "app", "onchip_flash",          0, 480 * 1024, 0},        \
-    {FAL_PART_MAGIC_WORD, "ef",  "onchip_flash", 480 * 1024,  32 * 1024, 0},        \
+    {FAL_PART_MAGIC_WORD, "app",      "onchip_flash",  0x04000, 232 * 1024, 0},     \
+    {FAL_PART_MAGIC_WORD, "download", "onchip_flash",  0x3E000, 232 * 1024, 0},     \
+    {FAL_PART_MAGIC_WORD, "ef",       "onchip_flash",  0x78000,  32 * 1024, 0},     \
+    {FAL_PART_MAGIC_WORD, "meta",     "onchip_flash",  0x03800,   2 * 1024, 0},     \
 }
 #endif
 

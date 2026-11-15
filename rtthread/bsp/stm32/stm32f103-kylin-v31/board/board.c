@@ -20,6 +20,10 @@ void SystemClock_Config(void)
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
+    /* The bootloader jumps here at 0x08004000; keep the vector table here
+     * even if the CMSIS SystemInit() ran with the default offset. */
+    SCB->VTOR = APP_FLASH_BASE;
+
     /** Initializes the CPU, AHB and APB busses clocks
     */
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;

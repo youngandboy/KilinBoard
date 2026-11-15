@@ -18,6 +18,7 @@ $ErrorActionPreference = "Stop"
 $RepoDir = Split-Path -Parent $PSScriptRoot
 $BspDir = Join-Path $RepoDir "bsp\stm32\stm32f103-kylin-v31"
 $HexFile = Join-Path $BspDir "rt-thread.hex"
+$BootHexFile = Join-Path $RepoDir "bootloader\build\bootloader.hex"
 $FlashBat = Join-Path (Split-Path -Parent $RepoDir) "flash.bat"
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $LogDir = Join-Path $RepoDir ("logs\rtthread-verify-" + $Stamp)
@@ -216,25 +217,37 @@ try {
     if (-not $SkipFlash) {
         Write-Step "Flash"
         if (-not (Test-Path $HexFile)) {
-            Add-Check "FLASH_OK" $false "HEX not found: $HexFile"
-            throw "missing HEX"
+            Add-Check "FLASH_OK" $false "app HEX not found: $HexFile"
+            throw "missing app HEX"
+        }
+        if (-not (Test-Path $BootHexFile)) {
+            Add-Check "FLASH_OK" $false "bootloader HEX not found: $BootHexFile"
+            throw "missing bootloader HEX"
         }
         if (-not (Test-Path $FlashBat)) {
             Add-Check "FLASH_OK" $false "flash.bat not found: $FlashBat"
             throw "missing flash.bat"
         }
 
+        $bootFlashOutput = & $FlashBat $BootHexFile 2>&1
+        $bootFlashExit = $LASTEXITCODE
+        $bootFlashOutput | Out-File -FilePath (Join-Path $LogDir "flash-boot.log") -Encoding utf8
+        $bootFlashOutput | ForEach-Object { Write-Host $_ }
+        if (($bootFlashExit -ne 0) -or (($bootFlashOutput | Out-String) -notmatch "Flash OK")) {
+            Add-Check "FLASH_OK" $false "bootloader flash exit=$bootFlashExit"
+            throw "bootloader flash failed"
+        }
+
         $flashOutput = & $FlashBat $HexFile 2>&1
         $flashExit = $LASTEXITCODE
-        $flashLog = Join-Path $LogDir "flash.log"
-        $flashOutput | Out-File -FilePath $flashLog -Encoding utf8
+        $flashOutput | Out-File -FilePath (Join-Path $LogDir "flash.log") -Encoding utf8
         $flashOutput | ForEach-Object { Write-Host $_ }
 
         if (($flashExit -ne 0) -or (($flashOutput | Out-String) -notmatch "Flash OK")) {
-            Add-Check "FLASH_OK" $false "flash exit=$flashExit (see flash.log)"
-            throw "flash failed"
+            Add-Check "FLASH_OK" $false "app flash exit=$flashExit (see flash.log)"
+            throw "app flash failed"
         }
-        Add-Check "FLASH_OK" $true "see flash.log"
+        Add-Check "FLASH_OK" $true "bootloader + app"
     }
     else {
         Add-Check "FLASH_OK" $true "skipped"

@@ -17,6 +17,9 @@ rtthread/bsp/**/*.elf
 rtthread/bsp/**/*.bin
 rtthread/bsp/**/*.hex
 
+# OTA bootloader build outputs
+rtthread/bootloader/build/
+
 # Python cache
 __pycache__/
 *.pyc

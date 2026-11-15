@@ -21,3 +21,6 @@ cd "$HERE/bsp/stm32/stm32f103-kylin-v31"
 arm-none-eabi-objcopy -O ihex rt-thread.elf rt-thread.hex
 echo "Built: $PWD/rt-thread.elf"
 echo "       $PWD/rt-thread.hex"
+
+echo "Building bootloader..."
+make -C "$HERE/bootloader" -j"${JOBS:-4}"

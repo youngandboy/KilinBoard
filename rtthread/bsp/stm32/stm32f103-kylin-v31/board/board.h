@@ -26,6 +26,10 @@ extern "C" {
 #define STM32_FLASH_SIZE             (512 * 1024)
 #define STM32_FLASH_END_ADDRESS      ((uint32_t)(STM32_FLASH_START_ADRESS + STM32_FLASH_SIZE))
 
+/* OTA layout: bootloader 16K, app 232K, download 232K, EasyFlash 32K. */
+#define APP_FLASH_BASE               ((uint32_t)0x08004000)
+#define APP_FLASH_SIZE               (232U * 1024U)
+
 /* Internal SRAM memory size[Kbytes] <8-64>, Default: 64*/
 #define STM32_SRAM_SIZE      64
 #define STM32_SRAM_END       (0x20000000 + STM32_SRAM_SIZE * 1024)
