@@ -1,4 +1,4 @@
-﻿# RT-Thread port for kyLin-V3.1
+# RT-Thread port for kyLin-V3.1
 
 This directory is part of the `firmware/` Git repository. It contains the
 RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM).
@@ -9,7 +9,7 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 - **Step 2 complete**: application skeleton, LED/KEY/buzzer, IWDG, FAL + EasyFlash config, msh commands.
 - **Step 3 complete**: software I2C (swi2c1), AT24C02, SHT20, PC3 ADC light, sensor task.
 - **Step 3b complete**: ADXL362 on SPI1 (PA4 CS/PA5 SCK/PA6 MISO/PA7 MOSI),
-  2 g / 100 Hz, INT1/INT2 data-ready IRQ, FIFO batch read, zero-offset calibration,
+  2 g / 100 Hz, INT1 data-ready IRQ, INT2 FIFO IRQ, DMA FIFO batch read, zero-offset calibration,
   acceleration + `valid` included in telemetry.
 - **Step 4 complete**: ESP8266 AT Socket, Wi-Fi join, DHCP, DNS, TCP client.
 - **Step 5 complete**: NDJSON uplink, command downlink, local dashboard (`server/server.py`).
@@ -21,7 +21,7 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
   connect, TX/RX and error counters.
 - **Step 6 OTA**: 16 KB bootloader, 232 KB app slot, 232 KB download slot,
   Ymodem-1K + CRC32 image validation; `ota` / `ota status` verified on board.
-- **Size**: app 225,780 B ROM / 13,220 B RAM; bootloader 4,764 B / 16 KB.
+- **Size**: app 227,456 B ROM / 13,524 B RAM; bootloader 4,764 B / 16 KB.
 - **Clock**: HSE 12 MHz x6 = 72 MHz.
 - **Console**: USART1, PA9/PA10, 115200 8N1.
 
@@ -173,7 +173,7 @@ Uplink (NDJSON, one JSON object per line):
 
 ```json
 {"v":1,"t":"d","seq":1,"up":123,"temp":28.6,"humi":71.4,"light":1593,
- "ax":0,"ay":-3,"az":1001,"valid":7}
+ "ax":0,"ay":-3,"az":1001,"pitch":0.0,"roll":0.0,"valid":7}
 ```
 
 `ax`/`ay`/`az` are ADXL362 acceleration in mg. `valid` bit0/1/2 marks
@@ -241,7 +241,7 @@ The board's ADXL362 is on SPI1:
 
 ```text
 PA4 CS, PA5 SCK, PA6 MISO, PA7 MOSI
-INT1 = PB0, INT2 = PA8 (both data-ready interrupts)
+INT1 = PB0 (data-ready), INT2 = PA8 (FIFO-ready)
 ```
 
 The driver uses direct SPI1 registers (no extra RT-Thread SPI HAL code) and
@@ -258,16 +258,17 @@ msh > adxl cal
 adxl: calibrated offsets X=51 Y=105 Z=154 mg
 
 msh > adxl irq
-adxl: INT1 data-ready count=32, INT2 data-ready count=32
+adxl: INT1 data-ready count=32, INT2 FIFO-ready count=1
 
 msh > adxl fifo
 adxl: fifo samples=16 first=48/103/1159 last=49/107/1155 mg
 ```
 
-`adxl cal` assumes the board is level; offsets are RAM-only and cleared by
-`adxl reset` or a reboot. INT1 (PB0) and INT2 (PA8) are both wired for
-data-ready; FIFO batch reads are polled by `adxl fifo`. The sensor task includes acceleration and validity in
-the NDJSON uplink; the dashboard shows Pitch/Roll computed on the PC. See
+`adxl cal` assumes the board is level; offsets are saved in EasyFlash and
+reloaded after reboot. `adxl reset` clears them. INT1 (PB0) is data-ready and
+wakes the sensor task; INT2 (PA8) is FIFO-ready. `adxl fifo` uses DMA for the
+FIFO burst read. The sensor task includes acceleration, Pitch/Roll and validity
+in the NDJSON uplink; the dashboard uses the MCU-calculated tilt values. See
 [`docs/adxl362.md`](docs/adxl362.md).
 
 ## OTA over Ymodem

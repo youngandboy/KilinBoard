@@ -1,6 +1,8 @@
-﻿#include <rtthread.h>
+#include <rtthread.h>
 #include <rtdevice.h>
 #include <board.h>
+#include <easyflash.h>
+#include <stdlib.h>
 #include "app_config.h"
 #include "app_types.h"
 #include "drv_adxl362.h"
@@ -31,10 +33,12 @@
 #define ADXL_FILTER_2G_100HZ  0x03
 #define ADXL_POWER_MEASURE    0x02
 #define ADXL_INTMAP_DATA_READY  0x01
+#define ADXL_INTMAP_FIFO_READY  0x02
 #define ADXL_FIFO_STREAM        0x02
 #define ADXL_FIFO_SAMPLES       16
 
 #define ADXL_FIFO_BURST_MAX     32
+#define ADXL_DMA_TIMEOUT_TICKS  rt_tick_from_millisecond(10)
 
 /* PA4 is the ADXL362 chip select. SPI1 uses PA5/PA6/PA7. */
 #define ADXL_CS_LOW()       (GPIOA->BSRR = (1U << (4U + 16U)))
@@ -42,16 +46,44 @@
 
 static int adxl_ready;
 static struct rt_mutex adxl_lock;
+static struct rt_semaphore adxl_data_sem;
 static volatile rt_uint32_t adxl_irq_total;
 static volatile rt_uint32_t adxl_int2_irq_total;
 static rt_int16_t adxl_off_x;
 static rt_int16_t adxl_off_y;
 static rt_int16_t adxl_off_z;
+static rt_uint8_t adxl_dma_zero[ADXL_FIFO_BURST_MAX * 6];
+
+static void adxl_load_calibration(void)
+{
+    const char *value;
+
+    value = ef_get_env("adxl_ox");
+    if (value != RT_NULL) { adxl_off_x = (rt_int16_t)atoi(value); }
+    value = ef_get_env("adxl_oy");
+    if (value != RT_NULL) { adxl_off_y = (rt_int16_t)atoi(value); }
+    value = ef_get_env("adxl_oz");
+    if (value != RT_NULL) { adxl_off_z = (rt_int16_t)atoi(value); }
+}
+
+static void adxl_save_calibration(void)
+{
+    char value[8];
+
+    rt_snprintf(value, sizeof(value), "%d", adxl_off_x);
+    ef_set_env("adxl_ox", value);
+    rt_snprintf(value, sizeof(value), "%d", adxl_off_y);
+    ef_set_env("adxl_oy", value);
+    rt_snprintf(value, sizeof(value), "%d", adxl_off_z);
+    ef_set_env("adxl_oz", value);
+    ef_save_env();
+}
 
 static void adxl_int1_callback(void *args)
 {
     (void)args;
     adxl_irq_total++;
+    rt_sem_release(&adxl_data_sem);
 }
 
 static void adxl_int2_callback(void *args)
@@ -93,6 +125,54 @@ static rt_uint8_t adxl_xfer(rt_uint8_t value)
     {
     }
     return (rt_uint8_t)SPI1->DR;
+}
+
+/* CS is already low and the FIFO read command has been sent. */
+static int adxl_fifo_dma_read(rt_uint8_t *dst, rt_uint32_t len)
+{
+    rt_tick_t start;
+
+    if ((dst == RT_NULL) || (len == 0U) || (len > sizeof(adxl_dma_zero)))
+    {
+        return -1;
+    }
+
+    RCC->AHBENR |= RCC_AHBENR_DMA1EN;
+
+    DMA1_Channel2->CCR = 0;
+    DMA1_Channel3->CCR = 0;
+    DMA1->IFCR = (1U << 4) | (1U << 8); /* clear channel 2/3 flags */
+
+    DMA1_Channel2->CPAR = (rt_uint32_t)&SPI1->DR;
+    DMA1_Channel2->CMAR = (rt_uint32_t)dst;
+    DMA1_Channel2->CNDTR = len;
+    DMA1_Channel2->CCR = DMA_CCR_MINC;
+
+    DMA1_Channel3->CPAR = (rt_uint32_t)&SPI1->DR;
+    DMA1_Channel3->CMAR = (rt_uint32_t)adxl_dma_zero;
+    DMA1_Channel3->CNDTR = len;
+    DMA1_Channel3->CCR = DMA_CCR_DIR | DMA_CCR_MINC;
+
+    SPI1->CR2 |= SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN;
+    DMA1_Channel2->CCR |= DMA_CCR_EN;
+    DMA1_Channel3->CCR |= DMA_CCR_EN;
+
+    start = rt_tick_get();
+    while ((DMA1_Channel2->CNDTR != 0U) &&
+           ((rt_tick_get() - start) < ADXL_DMA_TIMEOUT_TICKS))
+    {
+    }
+
+    while ((SPI1->SR & SPI_SR_BSY) != 0U)
+    {
+    }
+
+    DMA1_Channel2->CCR &= ~DMA_CCR_EN;
+    DMA1_Channel3->CCR &= ~DMA_CCR_EN;
+    SPI1->CR2 &= ~(SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN);
+    DMA1->IFCR = (1U << 4) | (1U << 8);
+
+    return (DMA1_Channel2->CNDTR == 0U) ? 0 : -1;
 }
 
 static int adxl_read_reg(rt_uint8_t reg, rt_uint8_t *data, rt_size_t len)
@@ -164,6 +244,12 @@ int drv_adxl362_init(void)
         rt_kprintf("[adxl] mutex init failed\n");
         return APP_ERR;
     }
+    if (rt_sem_init(&adxl_data_sem, "adxl", 0, RT_IPC_FLAG_PRIO) != RT_EOK)
+    {
+        rt_kprintf("[adxl] data sem init failed\n");
+        return APP_ERR;
+    }
+    adxl_load_calibration();
     adxl_ready = 1;
 
     adxl_write_reg(ADXL_REG_SOFT_RESET, ADXL_RESET_KEY);
@@ -179,9 +265,9 @@ int drv_adxl362_init(void)
         return APP_ERR_IO;
     }
 
-    /* Both INT1 and INT2 expose data-ready; FIFO reads are polled. */
+    /* INT1 = data-ready; INT2 = FIFO-ready. */
     adxl_write_reg(ADXL_REG_INTMAP1, ADXL_INTMAP_DATA_READY);
-    adxl_write_reg(ADXL_REG_INTMAP2, ADXL_INTMAP_DATA_READY);
+    adxl_write_reg(ADXL_REG_INTMAP2, ADXL_INTMAP_FIFO_READY);
     rt_pin_mode(APP_ADXL362_INT1_PIN, PIN_MODE_INPUT_PULLDOWN);
     rt_pin_mode(APP_ADXL362_INT2_PIN, PIN_MODE_INPUT_PULLDOWN);
     if (rt_pin_attach_irq(APP_ADXL362_INT1_PIN, PIN_IRQ_MODE_RISING,
@@ -306,6 +392,7 @@ int drv_adxl362_calibrate(rt_uint16_t samples)
         adxl_off_y = (rt_int16_t)(sum_y / (rt_int32_t)samples);
         /* The board is assumed level during calibration: target Z is +1 g. */
         adxl_off_z = (rt_int16_t)((sum_z / (rt_int32_t)samples) - 1000);
+        adxl_save_calibration();
     }
     rt_mutex_release(&adxl_lock);
     return result;
@@ -316,6 +403,7 @@ void drv_adxl362_clear_calibration(void)
     adxl_off_x = 0;
     adxl_off_y = 0;
     adxl_off_z = 0;
+    adxl_save_calibration();
 }
 
 void drv_adxl362_get_offsets(rt_int16_t *x, rt_int16_t *y, rt_int16_t *z)
@@ -323,6 +411,21 @@ void drv_adxl362_get_offsets(rt_int16_t *x, rt_int16_t *y, rt_int16_t *z)
     if (x != RT_NULL) { *x = adxl_off_x; }
     if (y != RT_NULL) { *y = adxl_off_y; }
     if (z != RT_NULL) { *z = adxl_off_z; }
+}
+
+int drv_adxl362_wait_data(rt_int32_t timeout_ms)
+{
+    if (!adxl_ready)
+    {
+        return APP_ERR_STATE;
+    }
+
+    if (rt_sem_take(&adxl_data_sem,
+                    rt_tick_from_millisecond((rt_uint32_t)timeout_ms)) != RT_EOK)
+    {
+        return APP_ERR_TIMEOUT;
+    }
+    return APP_OK;
 }
 
 rt_uint32_t drv_adxl362_irq_count(void)
@@ -371,9 +474,13 @@ int drv_adxl362_read_fifo(adxl362_xyz_t *samples, rt_uint32_t capacity, rt_uint3
     {
         ADXL_CS_LOW();
         (void)adxl_xfer(ADXL_READ_FIFO);
-        for (i = 0; i < (fifo_count * 6U); i++)
+        if (adxl_fifo_dma_read(raw, fifo_count * 6U) != 0)
         {
-            raw[i] = adxl_xfer(0x00);
+            /* DMA fallback; keep the same command/CS transaction. */
+            for (i = 0; i < (fifo_count * 6U); i++)
+            {
+                raw[i] = adxl_xfer(0x00);
+            }
         }
         ADXL_CS_HIGH();
 

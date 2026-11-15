@@ -33,7 +33,7 @@ Ymodem-1K + 每包 CRC16 + 整个镜像 CRC32
 Bootloader 代码区为 `0x08000000–0x080037FF`，最多 14 KB；参数页占最后一个
 2 KB 页。App 链接地址和 `SCB->VTOR` 都必须是 `0x08004000`。
 
-当前 App 约 221 KB，距离 232 KB 上限约 16 KB；后续添加功能要持续检查
+当前 App 约 224 KB，距离 232 KB 上限约 8.3 KB；后续添加功能要持续检查
 `arm-none-eabi-size rt-thread.elf`。
 
 ---

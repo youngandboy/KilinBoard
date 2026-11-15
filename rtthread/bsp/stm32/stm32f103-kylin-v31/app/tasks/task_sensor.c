@@ -6,6 +6,7 @@
 #include "board_key.h"
 #include "svc_sensor.h"
 #include "svc_storage.h"
+#include "drv_adxl362.h"
 #include "task_sensor.h"
 
 static struct rt_thread sensor_thread;
@@ -86,14 +87,18 @@ static void task_sensor_entry(void *parameter)
                     msg.u.sensor.acc_x_mg = sample.acc_x_mg;
                     msg.u.sensor.acc_y_mg = sample.acc_y_mg;
                     msg.u.sensor.acc_z_mg = sample.acc_z_mg;
+                    msg.u.sensor.pitch_x10 = sample.pitch_x10;
+                    msg.u.sensor.roll_x10 = sample.roll_x10;
                     msg.u.sensor.valid = sample.valid;
 
                     rt_kprintf("[sensor] T=%d.%d C, RH=%u.%u %%, light=%u mV, "
-                               "acc=%d/%d/%d mg\n",
+                               "acc=%d/%d/%d mg P=%d.%d R=%d.%d\n",
                                sample.temp_x10 / 10, temp_frac,
                                sample.humi_x10 / 10, sample.humi_x10 % 10,
                                sample.light_mv,
-                               sample.acc_x_mg, sample.acc_y_mg, sample.acc_z_mg);
+                               sample.acc_x_mg, sample.acc_y_mg, sample.acc_z_mg,
+                               sample.pitch_x10 / 10, sample.pitch_x10 % 10,
+                               sample.roll_x10 / 10, sample.roll_x10 % 10);
                 }
 
                 app_mq_send(&msg);
@@ -101,7 +106,11 @@ static void task_sensor_entry(void *parameter)
             }
         }
 
-        rt_thread_mdelay(APP_KEY_SCAN_MS);
+        /* Wake on ADXL362 INT1 data-ready instead of a fixed poll delay. */
+        if (drv_adxl362_wait_data(APP_KEY_SCAN_MS) != APP_OK)
+        {
+            rt_thread_mdelay(APP_KEY_SCAN_MS);
+        }
     }
 }
 

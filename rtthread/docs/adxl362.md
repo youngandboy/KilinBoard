@@ -17,7 +17,7 @@ kyLin-V3.1 的 U8 为 ADXL362，使用 SPI1：
 | MISO | PA6 |
 | MOSI | PA7 |
 | INT1 | PB0，数据就绪中断 |
-| INT2 \| PA8，数据就绪中断 |
+| INT2 \| PA8，FIFO-ready 中断 |
 
 驱动使用 SPI1 硬件外设，直接操作寄存器，不依赖 RT-Thread SPI
 设备框架，避免引入额外的 SPI HAL 代码。
@@ -39,7 +39,7 @@ SPI 参数：
 1. 配置 PA4–PA7 和 SPI1。
 2. 软复位 ADXL362（写 `0x52` 到 `0x1F`）。
 3. 读取 `DEVID_AD`（期望 `0xAD`）和 `PARTID`（期望 `0xF2`）。
-4. 配置 `INTMAP1 = DATA_READY`，`INTMAP2 = DATA_READY`。
+4. 配置 `INTMAP1 = DATA_READY`，`INTMAP2 = FIFO_READY`。
 5. PB0/PA8 配置为下拉输入、上升沿中断。
 6. 配置 `FILTER_CTL = 0x03`：±2 g、100 Hz ODR。
 7. 配置 `POWER_CTL = 0x02`：测量模式。
@@ -88,7 +88,7 @@ msh > adxl reset
 adxl: calibration cleared
 
 msh > adxl irq
-adxl: INT1 data-ready count=32, INT2 data-ready count=32
+adxl: INT1 data-ready count=32, INT2 FIFO-ready count=1
 
 msh > adxl fifo
 adxl: fifo samples=16 first=48/103/1159 last=49/107/1155 mg
@@ -103,19 +103,22 @@ adxl: fifo samples=16 first=48/103/1159 last=49/107/1155 mg
 - X/Y 平均值作为零偏；
 - Z 平均值减去 1000 mg 作为零偏，使校准后 Z 约为 +1 g。
 
-偏移只保存在 RAM，复位后清除；需要持久化时再写入 EasyFlash。
+偏移写入 EasyFlash（`adxl_ox` / `adxl_oy` / `adxl_oz`），复位后自动恢复；
+`adxl reset` 会清除并保存零偏移。
 
 ### INT1 数据就绪中断
 
-INT1（PB0）和 INT2（PA8）均映射 DATA_READY，使用上升沿 EXTI。`adxl irq` 显示两路累计次数。
-常规传感器采集仍按上传周期读取；中断计数用于确认数据就绪和链路健康。
+INT1（PB0）映射 DATA_READY，使用上升沿 EXTI，并释放采样信号量唤醒
+`sensor_task`；INT2（PA8）映射 FIFO_READY。`adxl irq` 显示两路累计次数。
 
 ### FIFO 批量读取
 
 `adxl fifo` 使用 STREAM 模式、水位 16，等待约 250 ms 后读取 16 组数据。
+INT2 的 FIFO_READY 中断用于确认 FIFO 有数据；批量数据通过 SPI1 TX/RX DMA
+读取，失败时自动回退到轮询。
+
 ADXL362 FIFO 的每个数据项是 2 字节：B15:B14 为轴类型，B13:B12 为符号扩展，
 B11:B0 为 12 位数据；每组样点按 X、Y、Z 排列。驱动按轴类型解析后应用零偏。
-
 读取完成后关闭 FIFO，传感器仍保持测量模式。
 
 ---
@@ -157,5 +160,5 @@ B11:B0 为 12 位数据；每组样点按 X、Y、Z 排列。驱动按轴类型�
 
 - 将零偏写入 EasyFlash，掉电保持。
 - 使用 INT1 唤醒采样任务，替代周期轮询。
-- 将 INT2 改为 FIFO 水位中断，并配合 DMA 批量读取。
+- 将 INT2 从 FIFO_READY 进一步改为 FIFO 水位中断。
 - 增加姿态融合/倾斜角平滑。

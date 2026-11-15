@@ -270,8 +270,8 @@ async function poll() {
       $('ax').textContent = d.ax ?? '--';
       $('ay').textContent = d.ay ?? '--';
       $('az').textContent = d.az ?? '--';
-      $('pitch').textContent = fmt(pitch(d.ax, d.ay, d.az), 1);
-      $('roll').textContent = fmt(roll(d.ax, d.ay, d.az), 1);
+      $('pitch').textContent = fmt(d.pitch ?? pitch(d.ax, d.ay, d.az), 1);
+      $('roll').textContent = fmt(d.roll ?? roll(d.ax, d.ay, d.az), 1);
       $('seq').textContent = d.seq ?? '--';
       $('uptime').textContent = d.up ?? '--';
       lastRecv = Date.now();

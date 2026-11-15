@@ -31,6 +31,10 @@ int svc_protocol_encode_sensor(char *buf, rt_size_t size, rt_uint32_t seq,
 {
     int temp_frac;
     int len;
+    const char *pitch_sign;
+    const char *roll_sign;
+    rt_uint16_t pitch_abs;
+    rt_uint16_t roll_abs;
 
     if ((buf == RT_NULL) || (sample == RT_NULL) || (size == 0))
     {
@@ -43,16 +47,28 @@ int svc_protocol_encode_sensor(char *buf, rt_size_t size, rt_uint32_t seq,
         temp_frac = -temp_frac;
     }
 
+    pitch_sign = (sample->pitch_x10 < 0) ? "-" : "";
+    pitch_abs = (sample->pitch_x10 < 0)
+              ? (rt_uint16_t)(-sample->pitch_x10)
+              : (rt_uint16_t)sample->pitch_x10;
+    roll_sign = (sample->roll_x10 < 0) ? "-" : "";
+    roll_abs = (sample->roll_x10 < 0)
+             ? (rt_uint16_t)(-sample->roll_x10)
+             : (rt_uint16_t)sample->roll_x10;
+
     len = rt_snprintf(buf, size,
                       "{\"v\":1,\"t\":\"d\",\"seq\":%u,\"up\":%u,"
                       "\"temp\":%d.%d,\"humi\":%u.%u,\"light\":%u,"
-                      "\"ax\":%d,\"ay\":%d,\"az\":%d,\"valid\":%u}\n",
+                      "\"ax\":%d,\"ay\":%d,\"az\":%d,"
+                      "\"pitch\":%s%u.%u,\"roll\":%s%u.%u,\"valid\":%u}\n",
                       (unsigned int)seq,
                       (unsigned int)(rt_tick_get() / RT_TICK_PER_SECOND),
                       sample->temp_x10 / 10, temp_frac,
                       sample->humi_x10 / 10, sample->humi_x10 % 10,
                       sample->light_mv,
                       sample->acc_x_mg, sample->acc_y_mg, sample->acc_z_mg,
+                      pitch_sign, pitch_abs / 10U, pitch_abs % 10U,
+                      roll_sign, roll_abs / 10U, roll_abs % 10U,
                       (unsigned int)sample->valid);
 
     if ((len < 0) || ((rt_size_t)len >= size))
