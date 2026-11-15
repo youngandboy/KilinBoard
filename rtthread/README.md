@@ -38,11 +38,19 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 
 ```text
 firmware/rtthread/
-鈹溾攢 README.md
-鈹溾攢 setup.sh                 # fetch RT-Thread, STM32 HAL/CMSIS, EasyFlash, at_device
-鈹溾攢 build.sh                 # WSL build wrapper
-鈹斺攢 bsp/stm32/
-   鈹斺攢 stm32f103-kylin-v31/  # BSP (board, applications, Kconfig, rtconfig)
+├─ README.md
+├─ setup.sh                  # fetch RT-Thread, STM32 HAL/CMSIS, EasyFlash, at_device
+├─ build.sh                  # WSL build wrapper
+├─ docs/
+│  ├─ architecture.md
+│  └─ verification.md
+├─ server/
+│  ├─ server.py              # TCP collector + HTTP dashboard
+│  └─ soak.ps1               # optional long-run API logger
+├─ tools/
+│  └─ verify-rtthread.ps1    # build / flash / serial / API gate
+└─ bsp/stm32/
+   └─ stm32f103-kylin-v31/   # BSP (board, applications, Kconfig, rtconfig)
 ```
 
 The RT-Thread kernel/components are intentionally **not** copied into this
@@ -105,6 +113,23 @@ Then open the USART1 debug port (CH340, 115200 8N1). Expected:
  2006 - 2024 Copyright by RT-Thread team
 msh >
 ```
+
+## Verify build + board + dashboard
+
+From `firmware/rtthread/`:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\verify-rtthread.ps1 -Port COM3
+```
+
+The gate builds, restores the image size, flashes, resets, captures the RT-Thread
+banner / `[app] started` / `[sensor]`, then checks `/api/data` for fresh board
+telemetry. It returns `RESULT: PASS` only when every enabled stage passes and
+writes logs to `rtthread/logs/rtthread-verify-<timestamp>/`.
+
+See [`docs/verification.md`](docs/verification.md) for parameters, evidence
+files, and troubleshooting. Use `-SkipFlash -SkipSerial -SkipApi` for a
+build-only check, or `-SkipApi` when the PC dashboard is not running.
 
 ## Notes
 
