@@ -105,10 +105,6 @@ int svc_net_socket_connect(const char *host, rt_uint16_t port)
         return APP_ERR_IO;
     }
 
-    tv.tv_sec = 0;
-    tv.tv_usec = 200000;
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
     rt_memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
@@ -120,6 +116,11 @@ int svc_net_socket_connect(const char *host, rt_uint16_t port)
         closesocket(sock);
         return APP_ERR_IO;
     }
+
+    /* Set timeout after connect; AT socket init resets it. */
+    tv.tv_sec = 0;
+    tv.tv_usec = 200000;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
     net_socket = sock;
     rt_kprintf("[net] connected %s:%u\n", host, port);
@@ -225,7 +226,7 @@ int svc_net_socket_recv(void *buf, rt_size_t len)
         return APP_ERR_STATE;
     }
 
-    received = sal_recvfrom(net_socket, buf, len, 0, RT_NULL, RT_NULL);
+    received = sal_recvfrom(net_socket, buf, len, MSG_DONTWAIT, RT_NULL, RT_NULL);
     if (received < 0)
     {
         if ((errno == EAGAIN) || (errno == EWOULDBLOCK))

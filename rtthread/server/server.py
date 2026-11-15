@@ -84,6 +84,7 @@ class BoardServer(ThreadingTCPServer):
 
 class WebHandler(BaseHTTPRequestHandler):
     server_version = "KylinDashboard/1.0"
+    protocol_version = "HTTP/1.1"
 
     def log_message(self, fmt, *args):
         return

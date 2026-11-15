@@ -40,7 +40,7 @@ rt_err_t app_mq_send(const app_msg_t *msg)
     return rt_mq_send(&app_mq, msg, sizeof(*msg));
 }
 
-rt_err_t app_mq_recv(app_msg_t *msg, rt_int32_t timeout)
+rt_ssize_t app_mq_recv(app_msg_t *msg, rt_int32_t timeout)
 {
     if (msg == RT_NULL)
     {

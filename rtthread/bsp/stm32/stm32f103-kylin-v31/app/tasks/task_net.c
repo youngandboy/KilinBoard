@@ -123,7 +123,7 @@ static void task_net_entry(void *parameter)
 
         app_event_send(APP_EVT_NET_ALIVE | APP_EVT_NET_CONNECTED);
 
-        while (app_mq_recv(&msg, 0) == RT_EOK)
+        while (app_mq_recv(&msg, 0) > 0)
         {
             if (msg.type == APP_MSG_SENSOR)
             {
@@ -137,12 +137,10 @@ static void task_net_entry(void *parameter)
 
                 len = svc_protocol_encode_sensor(tx_buf, sizeof(tx_buf),
                                                  tx_seq++, &sample);
-                if (len > 0)
+                if ((len > 0) &&
+                    (svc_net_socket_send(tx_buf, (rt_size_t)len) < 0))
                 {
-                    if (svc_net_socket_send(tx_buf, (rt_size_t)len) < 0)
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
         }
@@ -163,7 +161,8 @@ static void task_net_entry(void *parameter)
             else if (received < 0)
             {
                 svc_net_socket_close();
-                rt_thread_mdelay(500);
+                rt_thread_mdelay(200);
+                continue;
             }
         }
 

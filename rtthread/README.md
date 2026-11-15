@@ -9,9 +9,10 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 - **Step 2 complete**: application skeleton, LED/KEY/buzzer, IWDG, FAL + EasyFlash config, msh commands.
 - **Step 3 complete**: software I2C (swi2c1), AT24C02, SHT20, PC3 ADC light, sensor task.
 - **Step 4 complete**: ESP8266 AT Socket, Wi-Fi join, DHCP, DNS, TCP client.
-- **Step 5 implemented**: NDJSON uplink, command downlink, local dashboard (`server/server.py`).
-- **Step 5 local dashboard verified**: simulated board data shows in the page; command API returns JSON.
-- **Step 5 board link pending**: Windows firewall blocks inbound TCP 9000 on the Public profile; allow Python/port 9000 and reset the board.
+- **Step 5 complete**: NDJSON uplink, command downlink, local dashboard (`server/server.py`).
+- **Step 5 verified on board**: live temperature/humidity/light frames reach the PC;
+  LED/beep/period commands are applied. The HTTP dashboard uses keep-alive to
+  avoid browser polling socket exhaustion.
 - **Size**: 219,476 B ROM / 12,952 B RAM.
 - **Clock**: HSE 12 MHz x6 = 72 MHz.
 - **Console**: USART1, PA9/PA10, 115200 8N1.
@@ -24,6 +25,9 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 > Step 4 fix: AT 1.3.x `AT+CIPSTART` treats the 5th argument as local port, not
 > keepalive; `patches/at_device_esp8266_at130.patch` removes `,60` for old AT.
 > `AT+CIPDNS?` is unsupported; DNS still works through `AT+CIPDOMAIN`.
+> Step 5 fix: RT-Thread `rt_mq_recv()` returns the received message length, not
+> `RT_EOK`; the net task must test `> 0`. Downlink polling uses `MSG_DONTWAIT`
+> so the same task can transmit without being blocked by `recv()`.
 
 ## Layout
 
@@ -146,9 +150,9 @@ msh > cfg set srv_port 9000
 msh > cfg save
 ```
 
-Windows firewall must allow inbound TCP 9000 for Python on the active profile.
-The current PC is on the **Public** profile, so this one-time admin command is
-needed (or allow Python in Windows Defender Firewall):
+Windows firewall must allow inbound TCP 9000 for Python on the active network
+profile. The verified setup uses the **Private** profile. If the board can
+connect but no frames arrive, temporarily allow Python or add a rule:
 
 ```powershell
 New-NetFirewallRule -DisplayName "Kylin TCP 9000" -Direction Inbound `
@@ -160,6 +164,6 @@ uptime, history, and buttons for LED/beep/upload-period.
 
 ## Next steps
 
-- Allow firewall TCP 9000 and verify board -> PC live data.
 - Optional: reconnect backoff tuning and 24 h stability test.
+- Optional: persist dashboard history across server restarts.
 
