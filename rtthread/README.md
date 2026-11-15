@@ -13,7 +13,10 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 - **Step 5 verified on board**: live temperature/humidity/light frames reach the PC;
   LED/beep/period commands are applied. The HTTP dashboard uses keep-alive to
   avoid browser polling socket exhaustion.
-- **Size**: 219,476 B ROM / 12,952 B RAM.
+- **Step 5 stability**: reconnect uses exponential backoff (1–30 s), stale
+  queued samples are dropped after reconnect, and `net stat` exposes link,
+  connect, TX/RX and error counters.
+- **Size**: 220,604 B ROM / 13,016 B RAM.
 - **Clock**: HSE 12 MHz x6 = 72 MHz.
 - **Console**: USART1, PA9/PA10, 115200 8N1.
 
@@ -27,7 +30,9 @@ RT-Thread BSP for the kyLin-V3.1 board (STM32F103RET6, 512 KB Flash / 64 KB RAM)
 > `AT+CIPDNS?` is unsupported; DNS still works through `AT+CIPDOMAIN`.
 > Step 5 fix: RT-Thread `rt_mq_recv()` returns the received message length, not
 > `RT_EOK`; the net task must test `> 0`. Downlink polling uses `MSG_DONTWAIT`
-> so the same task can transmit without being blocked by `recv()`.
+> so the same task can transmit without being blocked by `recv()`. Reconnect
+> backoff is capped at 30 s, and the message queue is drained while offline so
+> reconnecting does not replay a burst of stale samples.
 
 ## Layout
 
@@ -149,6 +154,27 @@ msh > cfg set srv_host 192.168.3.103
 msh > cfg set srv_port 9000
 msh > cfg save
 ```
+
+Check live link and counters on the board:
+
+```text
+msh > net stat
+```
+
+The output includes link/socket state, current reconnect backoff, connect
+attempts/successes, disconnect count, TX frames/errors/dropped samples, and
+RX packet/command/error counts.
+
+Run a soak test on the PC while the board and server stay up:
+
+```powershell
+cd H:\RTOS\OneNet_Mini\firmware\rtthread
+powershell -NoProfile -ExecutionPolicy Bypass -File .\server\soak.ps1 -Hours 24
+```
+
+The CSV is written under `%TEMP%\kylin-soak-*.csv` unless `-OutFile` is given.
+It records API availability, board online state, last sequence/uptime, and data
+age every 10 seconds.
 
 Windows firewall must allow inbound TCP 9000 for Python on the active network
 profile. The verified setup uses the **Private** profile. If the board can

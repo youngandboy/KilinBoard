@@ -62,6 +62,12 @@
 #define APP_SUPERVISOR_PERIOD_MS   1000
 #define APP_WDT_TIMEOUT_S          5
 
+/* Network reconnect policy. Backoff is reset after a successful connect. */
+#define APP_NET_LINK_POLL_MS       1000
+#define APP_NET_RECONNECT_MIN_MS   1000
+#define APP_NET_RECONNECT_MAX_MS   30000
+#define APP_NET_TX_TIMEOUT_MS      1000
+
 /* --------------------------------------------------------------------------
  * IPC
  * -------------------------------------------------------------------------- */

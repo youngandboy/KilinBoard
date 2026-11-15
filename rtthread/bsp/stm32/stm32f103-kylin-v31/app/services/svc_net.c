@@ -117,10 +117,14 @@ int svc_net_socket_connect(const char *host, rt_uint16_t port)
         return APP_ERR_IO;
     }
 
-    /* Set timeout after connect; AT socket init resets it. */
+    /* Set timeouts after connect; AT socket init resets them. */
     tv.tv_sec = 0;
     tv.tv_usec = 200000;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+    tv.tv_sec = APP_NET_TX_TIMEOUT_MS / 1000;
+    tv.tv_usec = (APP_NET_TX_TIMEOUT_MS % 1000) * 1000;
+    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
     net_socket = sock;
     rt_kprintf("[net] connected %s:%u\n", host, port);
@@ -233,6 +237,13 @@ int svc_net_socket_recv(void *buf, rt_size_t len)
         {
             return 0;
         }
+        svc_net_socket_close();
+        return APP_ERR_IO;
+    }
+
+    /* at_recvfrom() returns 0 when the peer has closed the TCP connection. */
+    if (received == 0)
+    {
         svc_net_socket_close();
         return APP_ERR_IO;
     }
