@@ -188,6 +188,12 @@ INDEX_HTML = r"""<!doctype html>
   .section-title { margin:26px 0 12px; font-size:15px; color:var(--dim); }
   .cmd { margin-top:10px; }
   code { background:#21262d; padding:2px 6px; border-radius:6px; }
+  .desk-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:14px; }
+  .desk-item { background:#0d1117; border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+  .desk-item .k { color:var(--dim); font-size:12px; }
+  .desk-item .v { font-size:20px; font-weight:600; margin-top:4px; }
+  .mode-tabs { display:flex; gap:8px; flex-wrap:wrap; }
+  .mode-tabs button.active { border-color:var(--accent); background:rgba(56,139,253,.18); color:#79c0ff; }
 </style>
 </head>
 <body>
@@ -203,6 +209,30 @@ INDEX_HTML = r"""<!doctype html>
     <div class="card"><div class="label">加速度 X / Y / Z</div><div class="value" style="font-size:22px"><span id="ax">--</span> <span class="unit">/</span> <span id="ay">--</span> <span class="unit">/</span> <span id="az">--</span><span class="unit">mg</span></div></div>
     <div class="card"><div class="label">倾角 Pitch / Roll</div><div class="value" style="font-size:22px"><span id="pitch">--</span> <span class="unit">/</span> <span id="roll">--</span><span class="unit">°</span></div></div>
     <div class="card"><div class="label">序号 / 运行时间</div><div class="value" style="font-size:22px"><span id="seq">--</span> <span class="unit">/</span> <span id="uptime">--</span><span class="unit">s</span></div></div>
+  </div>
+
+  <div class="section-title">智能桌面伴侣</div>
+  <div class="card">
+    <div class="row mode-tabs">
+      <button id="modeEnv" onclick="desk('mode', 0)">环境</button>
+      <button id="modePomo" onclick="desk('mode', 1)">番茄钟</button>
+      <button id="modeSit" onclick="desk('mode', 2)">久坐</button>
+      <span style="width:12px"></span>
+      <button class="primary" onclick="desk('start')">开始</button>
+      <button onclick="desk('pause')">暂停</button>
+      <button onclick="desk('reset')">重置</button>
+      <button onclick="desk('ack')">确认提醒</button>
+      <button onclick="deskToggleMute()">静音</button>
+    </div>
+    <div class="desk-grid">
+      <div class="desk-item"><div class="k">当前模式</div><div class="v" id="deskMode">--</div></div>
+      <div class="desk-item"><div class="k">番茄阶段</div><div class="v" id="deskPhase">--</div></div>
+      <div class="desk-item"><div class="k">剩余时间</div><div class="v" id="deskRemain">--</div></div>
+      <div class="desk-item"><div class="k">已完成专注</div><div class="v" id="deskCycles">--</div></div>
+      <div class="desk-item"><div class="k">无活动时间</div><div class="v" id="deskSit">--</div></div>
+      <div class="desk-item"><div class="k">环境舒适度</div><div class="v" id="deskComfort">--</div></div>
+    </div>
+    <div id="deskStatus" class="muted cmd">桌面伴侣：--</div>
   </div>
 
   <div class="section-title">远程控制</div>
@@ -250,6 +280,24 @@ async function sendCmd(cmd) {
 function led(on) { sendCmd({t:'c', led: Number($('ledId').value), on: Number(on)}); }
 function beep() { sendCmd({t:'c', beep: Number($('beepMs').value)}); }
 function period() { sendCmd({t:'c', period: Number($('period').value)}); }
+const MODE_NAMES = ['环境', '番茄钟', '久坐'];
+const PHASE_NAMES = ['空闲', '专注', '暂停', '短休息', '长休息'];
+const COMFORT_NAMES = ['未知', '舒适', '偏热', '偏冷', '干燥', '潮湿'];
+let lastDesk = null;
+
+function desk(action, value) {
+  const cmd = {t:'c', desk:action};
+  if (value !== undefined) cmd.v = value;
+  sendCmd(cmd);
+}
+function deskToggleMute() {
+  desk('mute', lastDesk && lastDesk.mute ? 0 : 1);
+}
+function setDeskButtons(mode) {
+  for (const [id, m] of [['modeEnv',0], ['modePomo',1], ['modeSit',2]]) {
+    $(id).className = (mode === m) ? 'active' : '';
+  }
+}
 
 function fmt(x, digits=1) { return (x === null || x === undefined) ? '--' : Number(x).toFixed(digits); }
 function pitch(x, y, z) { return (x === null || x === undefined || y === null || y === undefined || z === null || z === undefined) ? null : Math.atan2(y, Math.sqrt(x*x + z*z)) * 180 / Math.PI; }
@@ -274,6 +322,17 @@ async function poll() {
       $('roll').textContent = fmt(d.roll ?? roll(d.ax, d.ay, d.az), 1);
       $('seq').textContent = d.seq ?? '--';
       $('uptime').textContent = d.up ?? '--';
+
+      lastDesk = d;
+      $('deskMode').textContent = MODE_NAMES[d.mode] ?? '--';
+      $('deskPhase').textContent = PHASE_NAMES[d.phase] ?? '--';
+      $('deskRemain').textContent = (d.remain === undefined) ? '--' : (d.remain + ' s');
+      $('deskCycles').textContent = d.cycles ?? '--';
+      $('deskSit').textContent = (d.sit === undefined) ? '--' : (d.sit + ' s');
+      $('deskComfort').textContent = COMFORT_NAMES[d.comfort] ?? '--';
+      setDeskButtons(d.mode);
+      $('deskStatus').textContent = '桌面伴侣：' +
+        (d.alert ? '检测到久坐，请活动一下' : (d.mute ? '已静音' : '运行中'));
       lastRecv = Date.now();
     }
     $('cmdStatus').textContent = '指令状态：' + (j.cmd_status || '--');

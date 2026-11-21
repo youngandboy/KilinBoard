@@ -1,5 +1,9 @@
 # OTA over Ymodem (kyLin-V3.1)
 
+> Desk-companion build: the application-side OTA client is disabled to preserve
+> flash headroom. The recovery bootloader and partitions remain; the `ota`
+> command and `verify-ota.ps1` apply to an OTA-enabled build.
+
 > 实现位置：`bootloader/`、`app/services/svc_ota.c`、`app/shell/msh_ota.c`、
 > `tools/ota_pack.py`、`tools/ota_send.ps1`。
 
@@ -33,7 +37,7 @@ Ymodem-1K + 每包 CRC16 + 整个镜像 CRC32
 Bootloader 代码区为 `0x08000000–0x080037FF`，最多 14 KB；参数页占最后一个
 2 KB 页。App 链接地址和 `SCB->VTOR` 都必须是 `0x08004000`。
 
-当前 App 约 224 KB，距离 232 KB 上限约 8.3 KB；后续添加功能要持续检查
+当前 App 约 229 KB，距离 232 KB 上限约 2.9 KB；后续添加功能要持续检查
 `arm-none-eabi-size rt-thread.elf`。
 
 ---

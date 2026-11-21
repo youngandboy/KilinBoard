@@ -10,6 +10,7 @@ typedef enum
     APP_CMD_LED,
     APP_CMD_BEEP,
     APP_CMD_PERIOD,
+    APP_CMD_DESK,
 } app_cmd_type_t;
 
 typedef struct
@@ -17,6 +18,7 @@ typedef struct
     app_cmd_type_t type;
     int a;
     int b;
+    char action[12];
 } app_cmd_t;
 
 int svc_protocol_encode_sensor(char *buf, rt_size_t size, rt_uint32_t seq,

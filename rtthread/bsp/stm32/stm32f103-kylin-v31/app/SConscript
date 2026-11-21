@@ -12,6 +12,10 @@ src += Glob('tasks/*.c')
 src += Glob('shell/*.c')
 src += Glob('port/*.c')
 
+# The desk-companion image keeps the recovery bootloader but disables the
+# application-side OTA client to preserve flash headroom.
+src = [s for s in src if s.name not in ('svc_ota.c', 'msh_ota.c')]
+
 path = [cwd]
 path += [os.path.join(cwd, '..', '..', '..', '..')]
 path += [os.path.join(cwd, 'board')]

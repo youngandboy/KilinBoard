@@ -47,7 +47,7 @@
 /* --------------------------------------------------------------------------
  * Tasks
  * -------------------------------------------------------------------------- */
-#define APP_TASK_SENSOR_STACK          1024
+#define APP_TASK_SENSOR_STACK          1280
 #define APP_TASK_SENSOR_PRIORITY       12
 #define APP_TASK_SENSOR_TICK           10
 
@@ -65,6 +65,7 @@
 #define APP_KEY_SCAN_MS            10
 #define APP_KEY_DEBOUNCE_COUNT     3
 #define APP_SENSOR_PERIOD_MS       1000
+#define APP_DESK_SAMPLE_MS          1000
 #define APP_SUPERVISOR_PERIOD_MS   1000
 #define APP_WDT_TIMEOUT_S          5
 

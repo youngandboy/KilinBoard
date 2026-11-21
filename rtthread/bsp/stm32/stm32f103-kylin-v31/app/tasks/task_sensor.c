@@ -6,6 +6,7 @@
 #include "board_key.h"
 #include "svc_sensor.h"
 #include "svc_storage.h"
+#include "svc_desk.h"
 #include "drv_adxl362.h"
 #include "task_sensor.h"
 
@@ -16,6 +17,7 @@ static void task_sensor_entry(void *parameter)
 {
     rt_uint8_t prev_keys;
     rt_tick_t last_sample;
+    rt_tick_t last_tx;
     int i;
 
     (void)parameter;
@@ -23,6 +25,7 @@ static void task_sensor_entry(void *parameter)
     board_key_init();
     prev_keys = board_key_scan();
     last_sample = rt_tick_get();
+    last_tx = last_sample;
 
     while (1)
     {
@@ -39,16 +42,10 @@ static void task_sensor_entry(void *parameter)
                     continue;
                 }
 
-                app_msg_t msg;
+                rt_uint8_t pressed = (keys & bit) ? 1U : 0U;
 
-                rt_memset(&msg, 0, sizeof(msg));
-                msg.type = APP_MSG_KEY;
-                msg.u.key.id = (rt_uint8_t)i;
-                msg.u.key.pressed = (keys & bit) ? 1 : 0;
-
-                rt_kprintf("[key] %d %s\n", i + 1, msg.u.key.pressed ? "down" : "up");
-                board_led_toggle((board_led_id_t)i);
-                app_mq_send(&msg);
+                rt_kprintf("[key] %d %s\n", i + 1, pressed ? "down" : "up");
+                svc_desk_on_key((rt_uint8_t)i, pressed);
             }
             prev_keys = keys;
         }
@@ -56,24 +53,37 @@ static void task_sensor_entry(void *parameter)
         app_event_send(APP_EVT_SENSOR_ALIVE);
 
         {
-            const app_cfg_t *cfg = svc_storage_get();
-            rt_uint32_t period_ms = APP_SENSOR_PERIOD_MS;
+            rt_tick_t now = rt_tick_get();
 
-            if ((cfg != RT_NULL) && (cfg->upload_period_s > 0))
-            {
-                period_ms = (rt_uint32_t)cfg->upload_period_s * 1000U;
-            }
+            svc_desk_tick(now);
 
-            if ((rt_tick_get() - last_sample) >= rt_tick_from_millisecond(period_ms))
+            if ((now - last_sample) >=
+                rt_tick_from_millisecond(APP_DESK_SAMPLE_MS))
             {
-                app_msg_t msg;
+                const app_cfg_t *cfg = svc_storage_get();
+                rt_uint32_t period_ms = APP_SENSOR_PERIOD_MS;
                 app_sensor_sample_t sample;
+                int sample_ok;
 
-                rt_memset(&msg, 0, sizeof(msg));
-                msg.type = APP_MSG_SENSOR;
-
-                if (svc_sensor_sample(&sample) == APP_OK)
+                if ((cfg != RT_NULL) && (cfg->upload_period_s > 0))
                 {
+                    period_ms = (rt_uint32_t)cfg->upload_period_s * 1000U;
+                }
+
+                /* Desk mode needs responsive timer/environment feedback. */
+                if (svc_desk_mode() != DESK_MODE_ENV)
+                {
+                    period_ms = APP_DESK_SAMPLE_MS;
+                }
+
+                sample_ok = svc_sensor_sample(&sample);
+                svc_desk_update_sensor(&sample, now);
+                svc_desk_fill_sample(&sample);
+
+                if ((sample_ok == APP_OK) &&
+                    ((now - last_tx) >= rt_tick_from_millisecond(period_ms)))
+                {
+                    app_msg_t msg;
                     int temp_frac = sample.temp_x10 % 10;
 
                     if (temp_frac < 0)
@@ -81,6 +91,8 @@ static void task_sensor_entry(void *parameter)
                         temp_frac = -temp_frac;
                     }
 
+                    rt_memset(&msg, 0, sizeof(msg));
+                    msg.type = APP_MSG_SENSOR;
                     msg.u.sensor.temp_x10 = sample.temp_x10;
                     msg.u.sensor.humi_x10 = sample.humi_x10;
                     msg.u.sensor.light = sample.light_mv;
@@ -89,6 +101,14 @@ static void task_sensor_entry(void *parameter)
                     msg.u.sensor.acc_z_mg = sample.acc_z_mg;
                     msg.u.sensor.pitch_x10 = sample.pitch_x10;
                     msg.u.sensor.roll_x10 = sample.roll_x10;
+                    msg.u.sensor.desk_mode = sample.desk_mode;
+                    msg.u.sensor.desk_phase = sample.desk_phase;
+                    msg.u.sensor.desk_remain = sample.desk_remain;
+                    msg.u.sensor.desk_cycles = sample.desk_cycles;
+                    msg.u.sensor.desk_sit = sample.desk_sit;
+                    msg.u.sensor.desk_alert = sample.desk_alert;
+                    msg.u.sensor.desk_mute = sample.desk_mute;
+                    msg.u.sensor.desk_comfort = sample.desk_comfort;
                     msg.u.sensor.valid = sample.valid;
 
                     rt_kprintf("[sensor] T=%d.%d C, RH=%u.%u %%, light=%u mV, "
@@ -99,10 +119,12 @@ static void task_sensor_entry(void *parameter)
                                sample.acc_x_mg, sample.acc_y_mg, sample.acc_z_mg,
                                sample.pitch_x10 / 10, sample.pitch_x10 % 10,
                                sample.roll_x10 / 10, sample.roll_x10 % 10);
+
+                    app_mq_send(&msg);
+                    last_tx = now;
                 }
 
-                app_mq_send(&msg);
-                last_sample = rt_tick_get();
+                last_sample = now;
             }
         }
 

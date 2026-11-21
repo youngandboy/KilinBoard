@@ -37,7 +37,12 @@ published image.
   connect, TX/RX and error counters.
 - **Step 6 OTA**: 16 KB bootloader, 232 KB app slot, 232 KB download slot,
   Ymodem-1K + CRC32 image validation; `ota` / `ota status` verified on board.
-- **Size**: app 227,456 B ROM / 13,524 B RAM; bootloader 4,764 B / 16 KB.
+- **Step 7 desk companion**: environment, Pomodoro and sedentary reminders on
+  the existing LEDs, keys, buzzer, SHT20, light sensor and ADXL362; local
+  dashboard controls and status cards. The application-side OTA client is
+  disabled in this image to preserve flash headroom; the recovery bootloader
+  and partition table remain.
+- **Size**: app 232,816 B ROM / 14,188 B RAM; bootloader 4,764 B / 16 KB.
 - **Clock**: HSE 12 MHz x6 = 72 MHz.
 - **Console**: USART1, PA9/PA10, 115200 8N1.
 
@@ -286,6 +291,35 @@ wakes the sensor task; INT2 (PA8) is FIFO-ready. `adxl fifo` uses DMA for the
 FIFO burst read. The sensor task includes acceleration, Pitch/Roll and validity
 in the NDJSON uplink; the dashboard uses the MCU-calculated tilt values. See
 [`docs/adxl362.md`](docs/adxl362.md).
+
+## Desk companion
+
+The `desk` build turns the board into a small desk device with three modes:
+
+- **Environment**: temperature/humidity/light values and comfort LEDs
+- **Pomodoro**: 25/5/15-minute focus, break and long-break phases
+- **Sedentary reminder**: ADXL362-based desk/chair inactivity detection
+
+Keys: `KEY1` start/pause or acknowledge, `KEY2` reset, `KEY3` switch mode,
+`KEY4` mute. The buzzer is muted by default on boot; press KEY4 or run
+`desk mute 0` when sound is wanted. The dashboard adds mode tabs, timer state,
+inactivity time, comfort and control buttons.
+
+```text
+msh > desk
+msh > desk mode env|pomo|sit
+msh > desk start
+msh > desk pause
+msh > desk reset
+msh > desk test 10 5 10
+```
+
+See [`docs/desk-companion.md`](docs/desk-companion.md) for key/LED mappings,
+timings and the NDJSON fields.
+
+> The desk-companion image keeps the recovery bootloader but does not compile
+> the application-side OTA client (`svc_ota.c` / `msh_ota.c`). The `ota` command
+> and `verify-ota.ps1` therefore apply only to an OTA-enabled build.
 
 ## OTA over Ymodem
 

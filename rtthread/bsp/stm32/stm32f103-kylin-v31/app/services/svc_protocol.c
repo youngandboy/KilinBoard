@@ -3,6 +3,36 @@
 #include "app_types.h"
 #include "svc_protocol.h"
 
+static int json_get_str(const char *line, const char *key,
+                        char *value, rt_size_t size)
+{
+    const char *p = rt_strstr(line, key);
+    rt_size_t len = 0;
+
+    if ((p == RT_NULL) || (value == RT_NULL) || (size == 0U))
+    {
+        return -1;
+    }
+
+    p += rt_strlen(key);
+    while ((*p == ' ') || (*p == ':'))
+    {
+        p++;
+    }
+    if (*p == '"')
+    {
+        p++;
+    }
+
+    while ((*p != '\0') && (*p != '"') && (*p != ',') && (*p != '}') &&
+           (len < (size - 1U)))
+    {
+        value[len++] = *p++;
+    }
+    value[len] = '\0';
+    return (len > 0U) ? 0 : -1;
+}
+
 static int json_get_int(const char *line, const char *key, int *value)
 {
     const char *p = rt_strstr(line, key);
@@ -60,7 +90,10 @@ int svc_protocol_encode_sensor(char *buf, rt_size_t size, rt_uint32_t seq,
                       "{\"v\":1,\"t\":\"d\",\"seq\":%u,\"up\":%u,"
                       "\"temp\":%d.%d,\"humi\":%u.%u,\"light\":%u,"
                       "\"ax\":%d,\"ay\":%d,\"az\":%d,"
-                      "\"pitch\":%s%u.%u,\"roll\":%s%u.%u,\"valid\":%u}\n",
+                      "\"pitch\":%s%u.%u,\"roll\":%s%u.%u,"
+                      "\"mode\":%u,\"phase\":%u,\"remain\":%u,"
+                      "\"cycles\":%u,\"sit\":%u,\"alert\":%u,\"mute\":%u,"
+                      "\"comfort\":%u,\"valid\":%u}\n",
                       (unsigned int)seq,
                       (unsigned int)(rt_tick_get() / RT_TICK_PER_SECOND),
                       sample->temp_x10 / 10, temp_frac,
@@ -69,6 +102,14 @@ int svc_protocol_encode_sensor(char *buf, rt_size_t size, rt_uint32_t seq,
                       sample->acc_x_mg, sample->acc_y_mg, sample->acc_z_mg,
                       pitch_sign, pitch_abs / 10U, pitch_abs % 10U,
                       roll_sign, roll_abs / 10U, roll_abs % 10U,
+                      (unsigned int)sample->desk_mode,
+                      (unsigned int)sample->desk_phase,
+                      (unsigned int)sample->desk_remain,
+                      (unsigned int)sample->desk_cycles,
+                      (unsigned int)sample->desk_sit,
+                      (unsigned int)sample->desk_alert,
+                      (unsigned int)sample->desk_mute,
+                      (unsigned int)sample->desk_comfort,
                       (unsigned int)sample->valid);
 
     if ((len < 0) || ((rt_size_t)len >= size))
@@ -91,8 +132,19 @@ int svc_protocol_decode_cmd(const char *line, app_cmd_t *cmd)
     cmd->type = APP_CMD_NONE;
     cmd->a = 0;
     cmd->b = 0;
+    cmd->action[0] = '\0';
 
-    if (rt_strstr(line, "\"led\":") != RT_NULL)
+    if (rt_strstr(line, "\"desk\":") != RT_NULL)
+    {
+        if (json_get_str(line, "\"desk\":", cmd->action,
+                         sizeof(cmd->action)) == 0)
+        {
+            (void)json_get_int(line, "\"v\":", &cmd->b);
+            cmd->type = APP_CMD_DESK;
+            return APP_OK;
+        }
+    }
+    else if (rt_strstr(line, "\"led\":") != RT_NULL)
     {
         if ((json_get_int(line, "\"led\":", &cmd->a) == 0) &&
             (json_get_int(line, "\"on\":", &cmd->b) == 0))

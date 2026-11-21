@@ -6,6 +6,7 @@
 #include "board_buzzer.h"
 #include "svc_net.h"
 #include "svc_protocol.h"
+#include "svc_desk.h"
 #include "svc_storage.h"
 #include "task_net.h"
 
@@ -14,7 +15,7 @@ static rt_uint8_t net_stack[APP_TASK_NET_STACK] __attribute__((aligned(RT_ALIGN_
 
 static char rx_line[256];
 static rt_size_t rx_used;
-static char tx_buf[256];
+static char tx_buf[384];
 static rt_uint32_t tx_seq;
 static app_net_stats_t net_stats;
 static rt_uint32_t reconnect_delay_ms = APP_NET_RECONNECT_MIN_MS;
@@ -57,6 +58,17 @@ static void handle_line(char *line)
             rt_snprintf(value, sizeof(value), "%d", cmd.a);
             svc_storage_set("upload_period", value);
             rt_kprintf("[net] cmd period %d s\n", cmd.a);
+        }
+        break;
+
+    case APP_CMD_DESK:
+        if (svc_desk_command(cmd.action, cmd.b) == APP_OK)
+        {
+            rt_kprintf("[net] cmd desk %s %d\n", cmd.action, cmd.b);
+        }
+        else
+        {
+            net_stats.last_error = APP_ERR_PARAM;
         }
         break;
 
@@ -204,6 +216,14 @@ static void task_net_entry(void *parameter)
                     sample.acc_z_mg = msg.u.sensor.acc_z_mg;
                     sample.pitch_x10 = msg.u.sensor.pitch_x10;
                     sample.roll_x10 = msg.u.sensor.roll_x10;
+                    sample.desk_mode = msg.u.sensor.desk_mode;
+                    sample.desk_phase = msg.u.sensor.desk_phase;
+                    sample.desk_remain = msg.u.sensor.desk_remain;
+                    sample.desk_cycles = msg.u.sensor.desk_cycles;
+                    sample.desk_sit = msg.u.sensor.desk_sit;
+                    sample.desk_alert = msg.u.sensor.desk_alert;
+                    sample.desk_mute = msg.u.sensor.desk_mute;
+                    sample.desk_comfort = msg.u.sensor.desk_comfort;
                     sample.valid = msg.u.sensor.valid;
 
                     len = svc_protocol_encode_sensor(tx_buf, sizeof(tx_buf),

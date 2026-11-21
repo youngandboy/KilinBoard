@@ -44,6 +44,14 @@ typedef struct
             rt_int16_t acc_z_mg;
             rt_int16_t pitch_x10;
             rt_int16_t roll_x10;
+            rt_uint8_t desk_mode;
+            rt_uint8_t desk_phase;
+            rt_uint16_t desk_remain;
+            rt_uint16_t desk_cycles;
+            rt_uint16_t desk_sit;
+            rt_uint8_t desk_alert;
+            rt_uint8_t desk_mute;
+            rt_uint8_t desk_comfort;
             rt_uint8_t valid;
         } sensor;
 
@@ -70,6 +78,14 @@ typedef struct
     rt_int16_t acc_z_mg;
     rt_int16_t pitch_x10;
     rt_int16_t roll_x10;
+    rt_uint8_t desk_mode;
+    rt_uint8_t desk_phase;
+    rt_uint16_t desk_remain;
+    rt_uint16_t desk_cycles;
+    rt_uint16_t desk_sit;
+    rt_uint8_t desk_alert;
+    rt_uint8_t desk_mute;
+    rt_uint8_t desk_comfort;
     rt_uint8_t valid;   /* bit0: SHT20, bit1: light, bit2: ADXL362 */
 } app_sensor_sample_t;
 
